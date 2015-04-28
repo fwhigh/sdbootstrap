@@ -8,3 +8,7 @@ docs/paper_src/online_blb.blg
 docs/paper_src/online_blb.log
 
 docs/paper_src/online_blb.pdf
+
+bin/boot_out.txt
+
+bin/data.txt
