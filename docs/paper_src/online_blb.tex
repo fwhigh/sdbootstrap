@@ -22,8 +22,19 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black]
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black]
+\tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, text width=3cm, draw=black]
+\tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=1cm, text centered, draw=black]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+
 
 \begin{document}
 
@@ -58,11 +69,11 @@ nonparametric bootstrap involving resampling $n$ data points with replacement
 $n$ times in $r$ total iterations, where $r \gtrsim 200$. An analysis pipeline
 is executed at each bootstrap iteration, and a histogram of a resulting
 statistic is built up in the process. The histogram is an estimator of the
-sample distribution of that statistic. The mean of the bootstrap distribution
-is an estimate of the sample mean; the standard deviation is an estimate of
-the standard error on the mean; confidence intervals are computed on the
-histograms directly; and covariance on multivariate statistics can be computed
-on the joint bootstrap distribution directly.
+sample distribution of that statistic. As a result, the mean of the bootstrap
+distribution is an estimate of the sample mean; the standard deviation is an
+estimate of the standard error on the mean; confidence intervals are computed
+on the histograms directly; and covariance on multivariate statistics can be
+computed on the joint bootstrap distribution directly.
 
 \section{Online Bootstrap}
 
@@ -165,6 +176,32 @@ Aggregate weight of updated mean $w_1$
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
+
+A flowchart is shown in Figure \ref{oblbflowchart}.
+
+\begin{figure}[tbp]
+\centering
+\label{oblbflowchart}
+\begin{tikzpicture}[node distance=2cm]
+\node (start) [startstop] {Start};
+\node (in1) [io, below of=start] {Input};
+\node (pro1) [process, below of=in1] {Process 1};
+\node (dec1) [decision, below of=pro1, yshift=-0.5cm] {Decision 1};
+\node (pro2a) [process, below of=dec1, yshift=-0.5cm] {Process 2a text text text text text text text text text text};
+\node (pro2b) [process, right of=dec1, xshift=2cm] {Process 2b};
+\node (out1) [io, below of=pro2a] {Output};
+\node (stop) [startstop, below of=out1] {Stop};
+\draw [arrow] (start) -- (in1);
+\draw [arrow] (in1) -- (pro1);
+\draw [arrow] (pro1) -- (dec1);
+\draw [arrow] (dec1) -- node[anchor=east] {yes} (pro2a);
+\draw [arrow] (dec1) -- node[anchor=south] {no} (pro2b);
+\draw [arrow] (pro2b) |- (pro1);
+\draw [arrow] (pro2a) -- (out1);
+\draw [arrow] (out1) -- (stop);
+\end{tikzpicture}
+\caption{Caption here.}
+\end{figure}
 
 
 \section{Comparison}
