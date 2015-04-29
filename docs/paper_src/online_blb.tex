@@ -37,12 +37,17 @@
 
 \title{Online Distributed Bootstrap for Big Data}
 \author{William High}
-\date{27 April 2015}
+\date{\today}
 \maketitle
 
 \begin{abstract}
 
-This document outlines an Online Bag of Little Bootstraps (OBLB) idea.
+This document outlines an Online Bag of Little Bootstraps (OBLB) idea. The Bag
+of Little Bootstraps is useful for static, distributed data, but requires you
+to know the total data set size and the size of each split on the distributed
+nodes. The OBLB variant presented here does not require the total data set
+size to be known, nor the size of splits, and in fact the data can be
+unbounded.
 
 \end{abstract}
 
@@ -92,7 +97,10 @@ Given that $r$ is typically chosen to be of order $10^2$ to $10^4$ or so, it's
 reasonable to aggregate and persist $r$ bootstrap buckets on a node or set of
 nodes using an online bootstrap bucket update rule.
 
-The algorithm is given in \ref{onlineblb} and uses \ref{onlinewmean}.
+The inner bootstraps require an online update rule that respects importance
+weights. The outer bootstrap aggregator requires a different
+
+Algorithm \ref{onlineblb} outlines the OBLB idea.
 
 \begin{algorithm}
 \caption{Online distributed bootstrap}
@@ -100,50 +108,60 @@ The algorithm is given in \ref{onlineblb} and uses \ref{onlinewmean}.
 \begin{algorithmic}[1]
 \Require \\
 Unbounded set of data-weight tuples $\{(X_1,w^{\prime}_1), (X_2,w^{\prime}_2), ...\}$\\
-Number of bootstrap iterations $r$\\
-Nodes $\{1,2, ..., s\}$\\
+Number of bootstrap buckets $r$\\
+Data split nodes $\{1,2, ..., s\}$, plus a master bootstrap node\\
 Online estimator update rule OnlineUpdate
 \Ensure \\
-Estimator value in each bootstrap iteration, $\hat\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$
+Estimator value in each bootstrap bucket, $\hat\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$
 \Procedure{Online Distributed Bootstrap}{}
+\State // Initialize the estimators and weights.
 \For{each bootstrap instance $k \gets 1$ to $r$}
 \State $w_{k} \gets 0$
 \State $\hat\theta_{k} \gets 0$
+\State // $s$ nodes maintain independent bootstrap buckets $\hat\theta_{jk}$ with associated weights $w_{jk}$.
 \For{each node $j \gets 1$ to $s$}
 \State $w_{jk} \gets 0$
 \State $\hat\theta_{jk} \gets 0$
 \EndFor
 \EndFor
+\State // Stream through the data.
 \For{each $i \gets 1$ to $\infty$}
-\State Randomly assign tuple $(X_i,w^{\prime}_i)$ to node $j$
+\State Randomly assign tuple $(X_i,w^{\prime}_i)$ to node $j \in \{1, 2, ..., s\}$
+\State // $s$ nodes maintain $r$ independent bootstraps.
+\State // Update the bootstrap buckets on node $j$:
 \For{each $k \gets 1$ to $r$}
 \State $W \gets w^{\prime}_i \times Poisson(\lambda = 1)$
 \State $(\hat\theta_{jk}, w_{jk}) \gets \mathrm{OnlineUpdate}(\hat\theta_{jk}, w_{jk}, X_i, W)$
-\State $(\hat\theta_{k}, w_{k}) \gets \mathrm{BootstrapAggregate}(\hat\theta_{k}, w_{k},\hat\theta_{jk}, w_{jk})$
+\EndFor
+\State // Another node maintains $r$ master bootstrap aggregates.
+\State // Update the bootstrap buckets on the master bootstrap node:
+\For{each $k \gets 1$ to $r$}
+\State $(\hat\theta_{k}, w_{k}) \gets \mathrm{OnlineMasterUpdate}(\hat\theta_{k}, w_{k},\hat\theta_{jk}, w_{jk})$
 \EndFor
 \EndFor
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
 
+Algorithm \ref{onlineupdate} is an example online update rule. Another example
+from a machine learning application is the Vowpal Wabbit online trainer.
 
 \begin{algorithm}
-\caption{BootstrapAggregate}
-\label{onlinewmean}
+\caption{OnlineUpdate example: streaming mean}
+\label{onlineupdate}
 \begin{algorithmic}[1]
 \Require \\
-Unbounded set of data-weight tuples $\{(\hat\theta_{1k}, w_{1k}), (\hat\theta_{2k}, w_{2k}), ...\}$
+Current mean $\theta_0$ \\
+Aggregate weight of current mean $w_0$ \\
+New data $X$ \\
+Weight of new data $w$
 \Ensure \\
-Estimator value in each bootstrap bucket, $\hat\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$
-\Procedure{BootstrapAggregate}{}
-\For{each bootstrap instance $k \gets 1$ to $r$}
-\State $\hat\theta_{k} \gets 0$
-\State $w_{k} \gets 0$
-\EndFor
-\For{each $k \gets 1$ to $r$}
-\State $\theta \gets (w\theta + WX)/(w + W)$
-\State $w \gets w + W$ 
-\EndFor
+Updated mean $\theta_1$ \\
+Aggregate weight of updated mean $w_1$
+\Procedure{OnlineUpdate}{}
+\State $\theta_1 \gets (w_0\theta_0 + WX)/(w_0 + W)$
+\State $w_1 \gets w_0 + W$ 
+\State \Return $(\theta_1, w_1)$
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}

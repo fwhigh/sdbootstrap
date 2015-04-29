@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-n_data=1000000
-n_boot=100
+n_data=1000
+n_boot=10000
 
 function inner_boot() {
     n_boot=$1
@@ -46,6 +46,10 @@ function inner_boot() {
             if (w == 0) { continue }
             boot[k] = online_update(boot[k],weight[k],$1,w)
             weight[k] = online_weight_update(weight[k],w)
+        }
+    }
+    END {
+        for (k in boot) {
             print k,boot[k],weight[k]
         }
     }' ;
@@ -55,15 +59,15 @@ export -f inner_boot
 function outer_boot() {
     n_boot=$1
     awk -v n_boot=$n_boot '
-    function bootstrap_aggregate(x1,w1,x2,w2) {
+    function online_update(x1,w1,x2,w2) {
         return (w1*x1 + w2*x2)/(w1 + w2)
     }
-    function bootstrap_weight_aggregate(w1,w2) {
+    function online_weight_update(w1,w2) {
         return (w1 + w2)
     }
     {
-        boot[$1] = bootstrap_aggregate(boot[$1],weight[$1],$2,$3)
-        weight[$1] = bootstrap_weight_aggregate(weight[$1],$3)
+        boot[$1] = online_update(boot[$1],weight[$1],$2,$3)
+        weight[$1] = online_weight_update(weight[$1],$3)
     }
     END {
         for (k in boot) {
@@ -100,11 +104,18 @@ if [ ! -f data.txt ]; then
     }' > data.txt
 fi
 
-echo "serial"
+echo "serial standard"
 
-# time cat data.txt | inner_boot $n_boot | outer_boot $n_boot > boot_out.txt
-# cat data.txt | mean_stddev $n_data
-# cut -d' ' -f 2 boot_out.txt | mean_stddev 0
+time cat data.txt | inner_boot $n_boot > boot_out.txt
+cat data.txt | mean_stddev $n_data
+cut -d' ' -f 2 boot_out.txt | mean_stddev 0
+
+echo "serial chained"
+
+time cat data.txt | inner_boot $n_boot | outer_boot $n_boot > boot_out.txt
+cat data.txt | mean_stddev $n_data
+cut -d' ' -f 2 boot_out.txt | mean_stddev 0
+
 
 echo "parallel"
 #time parallel --pipepart --block 1M -a data.txt inner_boot $n_boot > /dev/null #| outer_boot $n_boot > boot_out.txt
