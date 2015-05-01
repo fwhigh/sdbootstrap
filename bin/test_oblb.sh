@@ -2,7 +2,7 @@
 
 n_data=10000
 n_boot=1000
-ss_rate=0.5
+ss_rate=0.1
 
 function inner_boot() {
     n_boot=$1

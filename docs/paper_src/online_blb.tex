@@ -55,7 +55,7 @@
 %\crdata{0-12345-67-8/90/01}  % Allows non-default copyright data to be 'entered' - IF NEED BE.
 % --- End of author Metadata ---
 
-\title{Online Distributed Bootstrap for Big Data}
+\title{Online Distributed Bootstrap}
 \author{William High}
 \date{\today}
 \maketitle
@@ -71,10 +71,9 @@ unbounded.
 
 \end{abstract}
 
-\section{Bootstrap}
+\section{Introduction}
 
-The original bootstrap is by \cite{bib:efron}. This is the basic,
-nonparametric bootstrap involving resampling $n$ data points with replacement
+The original nonparametric bootstrap is by \cite{bib:efron}. This involves resampling $n$ data points with replacement
 $n$ times in $r$ total iterations, where $r \gtrsim 200$. An analysis pipeline
 is executed at each bootstrap iteration, and a histogram of a resulting
 statistic is built up in the process. The histogram is an estimator of the
@@ -84,7 +83,7 @@ estimate of the standard error on the mean; confidence intervals are computed
 on the histograms directly; and covariance on multivariate statistics can be
 computed on the joint bootstrap distribution directly.
 
-\section{Online Bootstrap}
+\cite{bib:mofnboot} describes methods of subsampling $m$ out of $n$ points and bootstrapping for sample distribution estimates.  Subsampling alters the sample distribution so analytic corrections have to be applied.  In the OBLB we subsample the original data to size $m$ randomly without replacement.  The standard deviation of the final bootstrap must then be corrected by the factor $\sqrt{m}$.
 
 The online bootstrap (OB) is sketched by \cite{bib:onlineboot} and is
 incorporated into Vowpal Wabbit. Those authors noted that the number of times
@@ -93,8 +92,6 @@ is distributed as $Poisson(\lambda = 1)$ for reasonable $r$. This suggests
 using an importance weight $W = w^{\prime}w$ for each data point in a stream,
 where $w^{\prime}$ is the input importance weight of the data point and $w
 \sim Poisson(\lambda = 1)$ is a weight that emulates bootstrap resampling.
-
-\section{Bag of Little Bootstraps}
 
 The Bag of Little Bootstraps is by \cite{bib:blb}. These authors had in mind
 big data that is split across nodes, such as on the Hadoop Filesystem. The BLB
@@ -111,7 +108,7 @@ and then average each summary statistic, which speeds up the algorithm but
 doesn't allow for the mining of additional bootstrap distribution summary
 statistics after the fact.
 
-\section{Online Bag of Little Bootstraps}
+\section{The Algorithm}
 
 Given that $r$ is typically chosen to be of order $10^2$ to $10^4$ or so, it's
 reasonable to aggregate and persist $r$ bootstrap buckets on a node or set of
@@ -128,6 +125,7 @@ Algorithm \ref{onlineblb} outlines the OBLB idea.
 \begin{algorithmic}[1]
 \Require \\
 Unbounded set of data-weight tuples $\{(X_1,w^{\prime}_1), (X_2,w^{\prime}_2), ...\}$\\
+Subsample rate $p\in(0,1]$\\
 Number of bootstrap buckets $r$\\
 Data split nodes $\{1,2, ..., s\}$, plus a master bootstrap node\\
 Online estimator update rule OnlineUpdate
@@ -146,6 +144,7 @@ Estimator value in each bootstrap bucket, $\hat\theta_{k}\;\forall \; k\in \{1, 
 \EndFor
 \State // Stream through the data.
 \For{each $i \gets 1$ to $\infty$}
+\If{$Unif(0,1)<p$}
 \State Randomly assign tuple $(X_i,w^{\prime}_i)$ to node $j \in \{1, 2, ..., s\}$
 \State // $s$ nodes maintain $r$ independent bootstraps.
 \State // Update the bootstrap buckets on node $j$:
@@ -153,11 +152,16 @@ Estimator value in each bootstrap bucket, $\hat\theta_{k}\;\forall \; k\in \{1, 
 \State $W \gets w^{\prime}_i \times Poisson(\lambda = 1)$
 \State $(\hat\theta_{jk}, w_{jk}) \gets \mathrm{OnlineUpdate}(\hat\theta_{jk}, w_{jk}, X_i, W)$
 \EndFor
+\If{UpdateMaster()}
 \State // Another node maintains $r$ master bootstrap aggregates.
 \State // Update the bootstrap buckets on the master bootstrap node:
 \For{each $k \gets 1$ to $r$}
 \State $(\hat\theta_{k}, w_{k}) \gets \mathrm{OnlineMasterUpdate}(\hat\theta_{k}, w_{k},\hat\theta_{jk}, w_{jk})$
+\State $w_{jk} \gets 0$
+\State $\hat\theta_{jk} \gets 0$
 \EndFor
+\EndIf
+\EndIf
 \EndFor
 \EndProcedure
 \end{algorithmic}
@@ -275,6 +279,17 @@ Maintains bootstrap histogram & Yes & Yes & No & Yes \\
 \hline
 \end{tabular}
 \end{table}
+
+
+\section{Simulations}
+
+\subsection{Sample Mean}
+
+\subsection{Online Logistic Regression Trainer}
+
+
+\section{Conclusions}
+
 
 
 
