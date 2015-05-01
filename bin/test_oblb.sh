@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 n_data=10000
-n_boot=200
+n_boot=1000
+ss_rate=0.1
 
 function inner_boot() {
     n_boot=$1
@@ -83,7 +84,8 @@ export -f outer_boot
 
 function mean_stddev() {
     n_samples=$1
-    awk -v n_samples=$n_samples '
+    ss_rate=$2
+    awk -v n_samples=$n_samples -v ss_rate=$ss_rate '
     {
         s0++
         s1 += $1
@@ -91,7 +93,7 @@ function mean_stddev() {
     }
     END {
         if (n_samples == 0) { n_samples = 1 }
-        print s1/s0,sqrt((s0 * s2 - s1 * s1)/(s0 * (s0 - 1)))/sqrt(n_samples)
+        print s1/s0,sqrt((s0 * s2 - s1 * s1)/(s0 * (s0 - 1)))/sqrt(n_samples/ss_rate)
     }' ;
 }
 export -f mean_stddev
@@ -108,21 +110,31 @@ if [ ! -f data.txt ]; then
     }' > data.txt
 fi
 
-echo "serial standard"
-time cat data.txt | inner_boot $n_boot > boot_out.txt
-cat data.txt | mean_stddev $n_data
-cut -d' ' -f 2 boot_out.txt | mean_stddev 0
+# echo "serial standard"
+# time cat data.txt | inner_boot $n_boot $ss_rate > boot_out.txt
+# cat data.txt | mean_stddev $n_data
+# cut -d' ' -f 2 boot_out.txt | mean_stddev 0
+
+echo "serial subsampled"
+time gawk -v ss_rate=$ss_rate 'rand() < ss_rate {print}' data.txt | \
+ inner_boot $n_boot > boot_out.txt
+cat data.txt | mean_stddev $n_data 1
+cut -d' ' -f 2 boot_out.txt | mean_stddev 0 $ss_rate
 
 echo "serial chained"
-time cat data.txt | inner_boot $n_boot | outer_boot $n_boot > boot1_out.txt
-cat data.txt | mean_stddev $n_data
-cut -d' ' -f 2 boot1_out.txt | mean_stddev 0
+time gawk -v ss_rate=$ss_rate 'rand() < ss_rate {print}' data.txt | \
+ inner_boot $n_boot | \
+ outer_boot $n_boot > boot1_out.txt
+cat data.txt | mean_stddev $n_data 1
+cut -d' ' -f 2 boot1_out.txt | mean_stddev 0 $ss_rate
 
 echo "parallel"
 #time parallel --pipepart --block 1M -a data.txt inner_boot $n_boot > /dev/null #| outer_boot $n_boot > boot_out.txt
-time parallel --block 30k --pipepart -a data.txt inner_boot $n_boot | outer_boot $n_boot > boot2_out.txt
-cat data.txt | mean_stddev $n_data
-cut -d' ' -f 2 boot2_out.txt | mean_stddev 0
+time gawk -v ss_rate=$ss_rate 'rand() < ss_rate {print}' data.txt | \
+ parallel --block 10k --pipe inner_boot $n_boot | \
+ outer_boot $n_boot > boot2_out.txt
+cat data.txt | mean_stddev $n_data 1
+cut -d' ' -f 2 boot2_out.txt | mean_stddev 0 $ss_rate
 
 
 
