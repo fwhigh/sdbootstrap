@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-n_data=1000
-n_boot=10000
+n_data=10000
+n_boot=200
 
 function inner_boot() {
     n_boot=$1
-    awk -v n_boot=$n_boot -v seed=$RANDOM '
+    gawk -v n_boot=$n_boot -v seed=$RANDOM '
     function poisson(randu) {
         if (randu < 0.3678794) {
             return 0
@@ -42,10 +42,14 @@ function inner_boot() {
     }
     {
         for (k=1;k<=n_boot;k++) {
-            w = poisson(rand())
+            w = $2*poisson(rand())
             if (w == 0) { continue }
             boot[k] = online_update(boot[k],weight[k],$1,w)
             weight[k] = online_weight_update(weight[k],w)
+            #num=(boot[k]*weight[k]+$1*w)
+            #denom=(weight[k]+w)
+            #boot[k]=num/denom
+            #weight[k]=denom
         }
     }
     END {
@@ -58,7 +62,7 @@ export -f inner_boot
 
 function outer_boot() {
     n_boot=$1
-    awk -v n_boot=$n_boot '
+    gawk -v n_boot=$n_boot '
     function online_update(x1,w1,x2,w2) {
         return (w1*x1 + w2*x2)/(w1 + w2)
     }
@@ -71,7 +75,7 @@ function outer_boot() {
     }
     END {
         for (k in boot) {
-            print k,boot[k]
+            print k,boot[k],weight[$1]
         }
     }' ;
 }
@@ -99,33 +103,28 @@ if [ ! -f data.txt ]; then
     awk -v n_data=$n_data '
     BEGIN {
         for (i=1;i<=n_data;i++) {
-            print rand()
+            print rand(),1
         }
     }' > data.txt
 fi
 
 echo "serial standard"
-
 time cat data.txt | inner_boot $n_boot > boot_out.txt
 cat data.txt | mean_stddev $n_data
 cut -d' ' -f 2 boot_out.txt | mean_stddev 0
 
 echo "serial chained"
-
-time cat data.txt | inner_boot $n_boot | outer_boot $n_boot > boot_out.txt
+time cat data.txt | inner_boot $n_boot | outer_boot $n_boot > boot1_out.txt
 cat data.txt | mean_stddev $n_data
-cut -d' ' -f 2 boot_out.txt | mean_stddev 0
-
+cut -d' ' -f 2 boot1_out.txt | mean_stddev 0
 
 echo "parallel"
 #time parallel --pipepart --block 1M -a data.txt inner_boot $n_boot > /dev/null #| outer_boot $n_boot > boot_out.txt
-time cat data.txt | parallel --pipe inner_boot $n_boot | outer_boot $n_boot > boot_out.txt
+time parallel --block 30k --pipepart -a data.txt inner_boot $n_boot | outer_boot $n_boot > boot2_out.txt
 cat data.txt | mean_stddev $n_data
-cut -d' ' -f 2 boot_out.txt | mean_stddev 0
-# stddev data.txt $n_data
+cut -d' ' -f 2 boot2_out.txt | mean_stddev 0
 
-# mean boot_out.txt
-# stddev boot_out.txt
+
 
 
 
