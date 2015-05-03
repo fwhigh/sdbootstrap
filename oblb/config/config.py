@@ -13,11 +13,15 @@ class Config(object):
                             help='N bootstrap interations. Default %s' % (Constants.N_BOOT,),
                             type=int,
                             default=Constants.N_BOOT)
-        parser.add_argument('--seperator', 
-                            help='Seperator. Default "%s"' % (Constants.SEPERATOR,),
+        parser.add_argument('--separator', 
+                            help='Separator. Default "%s"' % (Constants.SEPARATOR,),
                             type=str,
-                            default=Constants.SEPERATOR)
+                            default=Constants.SEPARATOR)
         parser.add_argument('--online_update', 
+                            help='Online update function. Default "%s"' % (Constants.ONLINE_UPDATE,),
+                            type=str,
+                            default=Constants.ONLINE_UPDATE)
+        parser.add_argument('--online_bootstrap_update', 
                             help='Online update function. Default "%s"' % (Constants.ONLINE_UPDATE,),
                             type=str,
                             default=Constants.ONLINE_UPDATE)
@@ -44,7 +48,7 @@ class Config(object):
         args = parser.parse_args()
 
         self.n_boot        = args.n_boot
-        self.seperator     = args.seperator
-        self.online_update = args.online_update
+        self.separator     = args.separator
+        self.online_update = eval(args.online_update)
         self.infile        = args.infile
         self.outfile       = args.outfile

@@ -36,3 +36,20 @@ echo "serial standard"
 time cat data.txt | ./oblb_inner.py > pyboot_out.txt
 cat data.txt | mean_stddev $n_data 1
 cut -d' ' -f 2 pyboot_out.txt | mean_stddev 0 1
+
+echo "serial with outer"
+time cat data.txt | ./oblb_inner.py | \
+ ./oblb_outer.py > pyboot_out1.txt
+cat data.txt | mean_stddev $n_data 1
+cut -d' ' -f 2 pyboot_out1.txt | mean_stddev 0 1
+
+echo "parallel"
+time cat data.txt | parallel --block 10k --pipe ./oblb_inner.py | \
+ ./oblb_outer.py > pyboot_out2.txt
+cat data.txt | mean_stddev $n_data 1
+cut -d' ' -f 2 pyboot_out2.txt | mean_stddev 0 1
+
+
+
+
+

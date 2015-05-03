@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from oblb.outer import OuterBootstrapAgg
+from oblb.bootstrap import OuterBootstrap
 
-oba = OuterBootstrapAgg()
+oba = OuterBootstrap()
 oba.main()
