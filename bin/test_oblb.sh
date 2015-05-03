@@ -111,7 +111,7 @@ if [ ! -f data.txt ]; then
 fi
 
 echo "serial standard"
-time cat data.txt | inner_boot $n_boot $ss_rate > boot_out.txt
+time cat data.txt | inner_boot $n_boot > boot_out.txt
 cat data.txt | mean_stddev $n_data 1
 cut -d' ' -f 2 boot_out.txt | mean_stddev 0 1
 
