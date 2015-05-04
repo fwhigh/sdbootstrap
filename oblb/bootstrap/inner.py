@@ -24,11 +24,7 @@ class InnerBootstrap(Bootstrap):
                 w = w_prime*np.random.poisson(lam=1.0)
                 if w == 0:
                     continue
-                (theta_boot[k], w_boot[k]) = online_update(theta_boot[k],
-                                                           w_boot[k],
-                                                           X,
-                                                           w,
-                                                           conf=conf)
+                (theta_boot[k],w_boot[k])=online_update(theta_boot[k],w_boot[k],X,w,conf=conf)
 
     def main(self):
         conf = Config()
