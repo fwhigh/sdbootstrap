@@ -2,7 +2,9 @@ class Constants(object):
 
     N_BOOT = 200
     SEPARATOR = ' '
-    ONLINE_UPDATE = 'lambda x1,w1,x2,w2: ((w1*x1+w2*x2)/(w1+w2),(w1+w2))'
+    ONLINE_UPDATE = 'WeightedMeanUpdater'
+    PRECISION = 1e3
+    QUANTILE = 0.5
 
     def __init__(self):
         pass

@@ -25,6 +25,14 @@ class Config(object):
                             help='Online update function. Default "%s"' % (Constants.ONLINE_UPDATE,),
                             type=str,
                             default=Constants.ONLINE_UPDATE)
+        parser.add_argument('--precision', 
+                            help='Precision of streaming quantile. Default %s' % (Constants.PRECISION,),
+                            type=float,
+                            default=Constants.PRECISION)
+        parser.add_argument('--quantile', 
+                            help='Quantile. Default %s' % (Constants.QUANTILE,),
+                            type=float,
+                            default=Constants.QUANTILE)
         parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
                             default=sys.stdin)
         parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
@@ -49,6 +57,8 @@ class Config(object):
 
         self.n_boot        = args.n_boot
         self.separator     = args.separator
-        self.online_update = eval(args.online_update)
+        self.online_update = args.online_update
+        self.precision     = args.precision
+        self.quantile      = args.quantile
         self.infile        = args.infile
         self.outfile       = args.outfile
