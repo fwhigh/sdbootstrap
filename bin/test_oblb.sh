@@ -2,7 +2,7 @@
 
 n_data=10000
 n_boot=1000
-ss_rate=0.1
+ss_rate=1
 
 function inner_boot() {
     n_boot=$1
@@ -115,14 +115,8 @@ time cat data.txt | inner_boot $n_boot > boot_out.txt
 cat data.txt | mean_stddev $n_data 1
 cut -d' ' -f 2 boot_out.txt | mean_stddev 0 1
 
-echo "serial subsampled"
-time gawk -v ss_rate=$ss_rate -v seed=$RANDOM 'BEGIN {srand(seed)} rand() < ss_rate {print}' data.txt | \
- inner_boot $n_boot > boot_out.txt
-cat data.txt | mean_stddev $n_data 1
-cut -d' ' -f 2 boot_out.txt | mean_stddev 0 $ss_rate
-
 echo "serial chained"
-time gawk -v ss_rate=$ss_rate -v seed=$RANDOM 'BEGIN {srand(seed)} rand() < ss_rate {print}' data.txt | \
+time cat data.txt | \
  inner_boot $n_boot | \
  outer_boot $n_boot > boot1_out.txt
 cat data.txt | mean_stddev $n_data 1
@@ -130,7 +124,7 @@ cut -d' ' -f 2 boot1_out.txt | mean_stddev 0 $ss_rate
 
 echo "parallel"
 #time parallel --pipepart --block 1M -a data.txt inner_boot $n_boot > /dev/null #| outer_boot $n_boot > boot_out.txt
-time gawk -v ss_rate=$ss_rate -v seed=$RANDOM 'BEGIN {srand(seed)} rand() < ss_rate {print}' data.txt | \
+time cat data.txt | \
  parallel --block 10k --pipe inner_boot $n_boot | \
  outer_boot $n_boot > boot2_out.txt
 cat data.txt | mean_stddev $n_data 1

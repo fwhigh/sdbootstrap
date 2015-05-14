@@ -33,31 +33,21 @@ class Config(object):
                             help='Quantile. Default %s' % (Constants.QUANTILE,),
                             type=float,
                             default=Constants.QUANTILE)
+        parser.add_argument('--batch_update',
+                           help='Batch update function. Default %s' % (Constants.BATCH_UPDATE,),
+                           type=str,
+                           default=Constants.BATCH_UPDATE)
         parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
                             default=sys.stdin)
         parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
                             default=sys.stdout)
-
-        # parser.add_argument('--m0_weeks', 
-        #                     help='M0 weeks. Default %s' % (TeradataConstants.DEFAULT_M0_WEEKS,),
-        #                     type=int,
-        #                     default=TeradataConstants.DEFAULT_M0_WEEKS)
-        # parser.add_argument('--drop_first', 
-        #                     help='Drop the output table first. Default False',
-        #                     action='store_true')
-        # parser.add_argument('--verbosity', 
-        #                     help='Verbosity level. Default %d' % (self.DEFAULT_VERBOSITY,),
-        #                     type=int,
-        #                     default=self.DEFAULT_VERBOSITY)
-        # parser.add_argument('--dry_run', 
-        #                     help='Dry run. Do not execute the SQL. Default False',
-        #                     action='store_true')
 
         args = parser.parse_args()
 
         self.n_boot        = args.n_boot
         self.separator     = args.separator
         self.online_update = args.online_update
+        self.batch_update  = args.batch_update
         self.precision     = args.precision
         self.quantile      = args.quantile
         self.infile        = args.infile

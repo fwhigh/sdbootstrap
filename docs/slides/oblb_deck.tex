@@ -1,0 +1,355 @@
+\documentclass[fleqn,t]{beamer}
+%\usetheme{Szeged}
+%\usecolortheme{dolphin}
+\usepackage{algorithm2e}
+
+\usepackage[quiet]{fontspec}
+\usepackage{xunicode}
+\usepackage{xltxtra}
+\usepackage{graphicx}
+\usepackage{forloop}
+\usepackage{stmaryrd}
+\usepackage{tikz}
+\usepackage{almslides}
+\usepackage{pdfpages}
+
+\usetikzlibrary{chains,decorations.pathmorphing,positioning,fit}
+\usetikzlibrary{decorations.shapes,calc,backgrounds}
+\usetikzlibrary{decorations.text,matrix}
+\usetikzlibrary{arrows,shapes.geometric,shapes.symbols,scopes}
+\usetikzlibrary{mindmap}
+\usetikzlibrary{fadings}
+
+\newif\ifnoteversion
+\expandafter\ifx\csname noteversion\endcsname\relax
+  \noteversionfalse
+\else
+  \noteversiontrue
+\fi
+
+%% %%% SETTINGS
+
+\frenchspacing
+\unitlength=0.01\textwidth
+\thicklines
+\urlstyle{sf}
+\graphicspath{{images/}}
+
+
+\def\fern{407428}
+\def\charcoal{4D4944}
+\definecolor{DarkCharcoal}{HTML}{\charcoal}
+\colorlet{Charcoal}{DarkCharcoal!85!white}
+\colorlet{AlertColor}{orange!70!black}
+\colorlet{DarkRed}{red!70!black}
+\colorlet{DarkBlue}{blue!70!black}
+\colorlet{DarkGreen}{green!50!black}
+
+\colorlet{Client}{blue!60!black}
+\colorlet{Server}{red!60!black}
+\colorlet{Both}{violet!80!black}
+
+\setbeamerfont{title}{size=\huge,parent=structure}
+\setbeamercolor{title}{fg=black}
+\setbeamercolor{frametitle}{fg=black}
+\setbeamercolor{normal text}{fg=black}
+
+\defaultfontfeatures{
+    Mapping=tex-text,
+    Scale=MatchLowercase,
+}
+\setmainfont{TeX Gyre Schola}
+\setmonofont{Monaco}
+
+\usefonttheme{serif}
+
+\setbeamertemplate{frametitle}
+  {\begin{centering}\medskip
+   \insertframetitle\par
+   \end{centering}}
+
+\setbeamercolor{alerted text}{fg=AlertColor}
+\setbeamertemplate{itemize item}{$\bullet$}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[text line]{%
+    \hfill\strut{%
+        \small\color{black!75}%
+        \texttt{\insertframenumber}%
+    }%
+    \hfill%
+}
+
+%%% NOTES
+
+\ifnoteversion
+\renewcommand<>\note[1]{%
+  \begin{tikzpicture}[orp]
+    \only#2{
+      \path
+        (current page.south) +(0,.3)
+        node[
+          font=\Large,
+          color=black,
+          draw=black,
+          fill=white,
+          text width=8cm,
+          text badly centered,
+          anchor=south,
+        ] {#1}
+      ;
+    }
+  \end{tikzpicture}%
+  \ignorespaces%
+}
+\else
+\renewcommand<>\note[1]{\ignorespaces}
+\fi
+
+%%% GENERALLY USEFUL MACROS
+
+\def\LAM{\text{\textK{$\bm\lambda$}\,}}
+
+\def\verysmall{%
+    \fontsize{7.5pt}{8pt}\selectfont%
+}
+
+\newcommand\setPause[2][0]{%
+  \setcounter{beamerpauses}{#2}%
+  \addtocounter{beamerpauses}{#1}%
+}
+
+\newcommand<>\always[1]{#1}
+
+\newcommand\aalt[4]{%
+  \alt<#1#2>{\color<#1>{AlertColor}#3\color{Charcoal}\relax}{#4}%
+}
+
+\newbox\mytikzbox
+\def\settikz{\setbox\mytikzbox=\hbox}
+\def\usetikz{\usebox\mytikzbox}
+
+\def\defgbox#1#2{%
+  \expandafter\global\expandafter\newbox\csname#2box\endcsname%
+  \expandafter\global\expandafter\def\csname#2\endcsname{%
+    \expandafter\usebox\csname#2box\endcsname%
+  }%
+  \expandafter\global\expandafter\setbox\csname#2box\endcsname=#1%
+}
+\def\defhbox{\defgbox\hbox}
+\def\defvbox{\defgbox\vbox}
+
+\def\setgbox#1#2{%
+  \expandafter\setbox\csname#2box\endcsname=#1%
+}
+\def\sethbox{\setgbox\hbox}
+\def\setvbox{\setgbox\vbox}
+
+\newcommand<>\EXP{\textcolor{Both}#1{\Exp}}
+
+\newcommand\tikzinfer[3][\relax]{
+  \begin{tikzpicture}
+    \node(premiss) {#2};
+    \node(conclusion)[at=(premiss.south),anchor=north] {#3};
+    \node(infer rule)[fit=(premiss) (conclusion),inner sep=0] {};
+    \draw[math line]
+      (premiss.south -| infer rule.west) -- (premiss.south -| infer rule.east)
+      ;
+    \if#1\relax \else
+      \node(infer label)[at=(infer rule.east),anchor=mid west] {(#1)};
+    \fi
+  \end{tikzpicture}
+}
+
+\def\mdef#1#2{\def#1{\ensuremath{#2}}}
+\def\mnew@command#1[#2]#3{\newcommand#1[#2]{\ensuremath{#3}}}
+\def\mnewcommand#1#2{%
+  \ifthenelse{\equal{#2}{[}}
+    {\mnew@command{#1}[}
+    {\mdef{#1}{#2}}
+}
+\let\mnew\mnewcommand
+
+\mdef\EnvD{
+  \mathord{
+    \tikz \draw[math line] (0,0) -- (.66em,0em) -- (.33em,1.3ex) -- cycle;
+  }
+}
+\mdef\EnvG{
+  \mathord{
+    \tikz \draw[math line] (0,0) -- (0,1.4ex) -- +(.5em,0);
+  }
+}
+\mdef\Proves{
+  \mathrel{
+    \tikz \draw[math tline] (0,0) -- (0,1.3ex) (0,.65ex) -- +(1ex,0);
+  }
+}
+\mdef\Exp{
+  \mathord{!\kern.5pt}
+}
+\mdef\pxE{
+  \mathord{\text{\textexclamdown}\kern.5pt}
+}
+
+%%%
+%%% TIKZ
+%%%
+
+\tikzstyle{sensor}=[draw, text centered, minimum height=2.5em]
+\tikzstyle{ann} = [minimum width=8em, text centered]
+\tikzstyle{data} = [draw, rounded corners, minimum width=3cm, minimum height=1cm, text centered, text width=4cm, draw=black]
+\tikzstyle{wa} = [draw, rounded corners, minimum width=3cm, minimum height=1cm, text centered, text width=3cm, draw=black]
+\tikzstyle{sc} = [sensor, text width=13em, 
+    minimum height=10em, rounded corners]
+\def\blockdist{1.5}
+\def\edgedist{2.5}
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+
+
+%%% TITLE INFO
+
+\title{The Distributed Bootstrap}
+\author{William High}
+\institute{Netflix Content Science \& Algorithms}
+\date{\today}
+
+
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}
+  \setbeamercovered{transparent}
+  \frametitle{Motivation.}
+  \onslide<2->{We valuate content because we need to know what to buy and how much to pay.} \\
+  \onslide<3->{Estimated value drives decisions on bringing in new titles, renewing existing ones, developing originals, marketing, ...} \\
+  \onslide<4->{We look back to train, look forward to forecast, and use combinations of on-site and off-site data to evaluate and predict titles that have and have not been on site.} \\
+  \onslide<5->{Time is money.}
+
+\end{frame}
+
+\begin{frame}
+\begin{algorithm}[H]
+  \tiny
+    \SetKwInOut{Input}{Input}
+    \SetKwInOut{Output}{Output}
+    \Begin{
+        \Input{Unbounded set of data-weight tuples $\{(X_1,w^{\prime}_1), (X_2,w^{\prime}_2), ...\}$
+          \\
+          Subsample rate $p\in(0,1]$
+          \\
+          Number of bootstrap buckets $r$
+          \\
+          Data split nodes $\{1,2, ..., s\}$, plus a master bootstrap node
+          \\
+          Online estimator update rule OnlineUpdate
+        }
+        \Output{Estimator value in each bootstrap bucket, $\hat\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$}
+        \For{$k \gets 1$ to $r$}{
+          $w_{k} \gets 0$
+          \\
+          $\hat\theta_{k} \gets 0$
+          \For{$k \gets 1$ to $r$}{
+            $w_{jk} \gets 0$
+            \\
+            $\hat\theta_{jk} \gets 0$
+          }
+        }
+        \For{$i \gets 1$ to $\infty$}{
+          Randomly assign tuple $(X_i,w^{\prime}_i)$ to node $j \in \{1, 2, ..., s\}$
+          \\
+          \For{$k \gets 1$ to $r$}{
+            $W \gets w^{\prime}_i \times Poisson(\lambda = 1)$
+            \\
+            $(\hat\theta_{jk}, w_{jk}) \gets \mathrm{OnlineUpdate}(\hat\theta_{jk}, w_{jk}, X_i, W)$
+          }
+          \If{UpdateMaster()} {
+            \For{$k \gets 1$ to $r$}{
+              $(\hat\theta_{k}, w_{k}) \gets \mathrm{OnlineMasterUpdate}(\hat\theta_{k}, w_{k},\hat\theta_{jk}, w_{jk})$
+              \\
+              $w_{jk} \gets 0$
+              \\
+              $\hat\theta_{jk} \gets 0$
+            }
+          }
+        }
+        \Return $G$
+    }
+\end{algorithm}
+\end{frame}
+
+
+\begin{frame}[c]{ }
+\centering
+\begin{figure}
+\resizebox{10cm}{!}{%
+\begin{tikzpicture}
+    \node (data) [data]  {$\{(X_1,w^{\prime}_1),(X_2,w^{\prime}_2),...\}$};
+
+%    \path (data.east)+(3.2,2.5) node (innerboot1) [wa] {$(\hat\theta_{jk},w_{jk})$, $j=1$, $\forall\,k\in\{1,2,...,r\}$};
+    \path (data.east)+(3.2,2.5) node (innerboot1) [wa] {$j=1$};
+    \path (data.east)+(3.2,1) node (innerboot2)[wa] {$j=2$};
+    \path (data.east)+(3.2,-0.6) node (dots1)[ann] {$\vdots$}; 
+    \path (data.east)+(3.2,-2) node (innerboot3)[wa] {$j=s$}; 
+    \path (innerboot3.south) +(0,-\blockdist) node (asrs)[align=center] {Inner bootstraps:\\$(\hat\theta_{jk},w_{jk})$\\$\forall \; k\in \{1, 2, ...., r\}$};
+    
+    \begin{pgfonlayer}{background}
+        \path (innerboot1.west |- innerboot1.north)+(-0.5,0.3) node (a) {};
+        \path (innerboot3.south -| innerboot3.east)+(+0.5,-0.3) node (b) {};
+        \path (innerboot3.east |- asrs.east)+(+0.5,-0.8) node (c) {};
+        \path[rounded corners, draw=black!50, dashed]
+            (a) rectangle (c);           
+        \path (innerboot3.north west)+(-0.2,0.2) node (a) {};
+    \end{pgfonlayer}
+
+    \path (innerboot1.east)+(4,0) node (outerboot1) [wa] {$k=1$};
+    \path (innerboot2.east)+(4,0) node (outerboot2) [wa] {$k=2$};
+    \path (dots1.east)+(4,0) node (dots2)[ann] {$\vdots$}; 
+    \path (innerboot3.east)+(4,0) node (outerboot3)[wa] {$k=r$};    
+    \path (outerboot3.south) +(0,-\blockdist) node (asrs)[align=center] {Outer bootstrap:\\$(\hat\theta_{k},w_{k})$};
+    
+    \begin{pgfonlayer}{background}
+        \path (outerboot1.west |- outerboot1.north)+(-0.5,0.3) node (a) {};
+        \path (outerboot3.south -| outerboot3.east)+(+0.5,-0.3) node (b) {};
+        \path (outerboot3.east |- asrs.east)+(+0.5,-0.8) node (c) {};
+        \path[rounded corners, draw=black!50, dashed]
+            (a) rectangle (c);           
+        \path (outerboot3.north west)+(-0.2,0.2) node (a) {};
+    \end{pgfonlayer}
+
+    \path (outerboot2.east)+(3.2,-1) node (masterboot) [wa]  {Bootstrap sample\\summary statistics};
+
+    \foreach \x in {1,2,3} 
+    {
+        \path [draw, ->] (data.east) -- node [above] {} (innerboot\x.west);
+    }
+
+    \foreach \x in {1,2,3} 
+    {
+        \foreach \y in {1,2,3} 
+        { 
+            \path [draw, ->] (innerboot\y.east) -- node [above] {} (outerboot\x.west);
+        }
+    }
+    
+    \foreach \x in {1,2,3} 
+    {
+        \path [draw, ->] (outerboot\x.east) -- node [above] {} (masterboot.west);
+    }
+
+
+
+                
+\end{tikzpicture}
+}
+\end{figure}
+
+\end{frame}
+
+
+
+\end{document}

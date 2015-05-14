@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-n_data=100000
+n_data=10000
 n_boot=200
-ss_rate=0.1
+ss_rate=1
 
 function mean_stddev() {
     n_samples=$1
@@ -32,25 +32,38 @@ if [ ! -f data.txt ]; then
     }' > data.txt
 fi
 
-# echo "serial standard"
+# echo "serial online"
 # time cat data.txt | \
-#  ./oblb_inner.py --online_update QuantileUpdater --precision 1e2 --quantile 0.1 > pyboot_out.txt
+#  ./oblb_inner.py --online_update WeightedMeanUpdater --precision 1e2 --quantile 0.1 > pyboot_out.txt
 # cat data.txt | mean_stddev $n_data 1
 # cut -d' ' -f 2 pyboot_out.txt | mean_stddev 0 1
 
+echo "serial batch"
+time cat data.txt | \
+ ./oblb_inner.py --batch_update WeightedMeanUpdater --precision 1e2 --quantile 0.1 > pyboot_out1.txt
+cat data.txt | mean_stddev $n_data 1
+cut -d' ' -f 2 pyboot_out1.txt | mean_stddev 0 1
+
+
 # echo "serial with outer"
 # time cat data.txt | ./oblb_inner.py | \
-#  ./oblb_outer.py > pyboot_out1.txt
+#  ./oblb_outer.py > pyboot_out2.txt
 # cat data.txt | mean_stddev $n_data 1
-# cut -d' ' -f 2 pyboot_out1.txt | mean_stddev 0 1
+# cut -d' ' -f 2 pyboot_out2.txt | mean_stddev 0 1
 
-echo "parallel"
+echo "parallel online"
 time cat data.txt | \
- parallel --block 100k --pipe ./oblb_inner.py --online_update QuantileUpdater --precision 1e2 --quantile 0.1 | \
- ./oblb_outer.py > pyboot_out2.txt
+ parallel --block 10k --pipe ./oblb_inner.py --online_update WeightedMeanUpdater --precision 1e4 --quantile 0.1 | \
+ ./oblb_outer.py > pyboot_out3.txt
 cat data.txt | mean_stddev $n_data 1
-cut -d' ' -f 2 pyboot_out2.txt | mean_stddev 0 1
+cut -d' ' -f 2 pyboot_out3.txt | mean_stddev 0 1
 
+echo "parallel batch"
+time gawk -v ss_rate=$ss_rate -v seed=$RANDOM 'BEGIN {srand(seed)} rand() < ss_rate {print}' data.txt | \
+ parallel --block 10k --pipe ./oblb_inner.py --batch_update WeightedMeanUpdater --precision 1e4 --quantile 0.1 | \
+ ./oblb_outer.py > pyboot_out4.txt
+cat data.txt | mean_stddev $n_data 1
+cut -d' ' -f 2 pyboot_out4.txt | mean_stddev 0 1
 
 
 

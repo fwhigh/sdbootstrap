@@ -3,6 +3,7 @@ class Constants(object):
     N_BOOT = 200
     SEPARATOR = ' '
     ONLINE_UPDATE = 'WeightedMeanUpdater'
+    BATCH_UPDATE = ''
     PRECISION = 1e3
     QUANTILE = 0.5
 

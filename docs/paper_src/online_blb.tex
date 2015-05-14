@@ -19,17 +19,13 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{amsfonts}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
+\usepackage{algorithm2e}
 \usepackage{rotating}
 
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows}
 \usepackage{bm,times}
 \usetikzlibrary{shapes.geometric, arrows}
-
-\renewcommand{\algorithmicrequire}{\textbf{Input:}}
-\renewcommand{\algorithmicensure}{\textbf{Output:}}
 
 \tikzstyle{sensor}=[draw, text centered, minimum height=2.5em]
 \tikzstyle{ann} = [minimum width=8em, text centered]
@@ -55,45 +51,62 @@
 %\crdata{0-12345-67-8/90/01}  % Allows non-default copyright data to be 'entered' - IF NEED BE.
 % --- End of author Metadata ---
 
-\title{Online Distributed Bootstrap}
+\title{Exact and Online Distributed Bootstraps}
 \author{William High}
 \date{\today}
 \maketitle
 
 \begin{abstract}
 
-This document outlines an Online Bag of Little Bootstraps (OBLB) idea. The Bag
-of Little Bootstraps is useful for static, distributed data, but requires you
-to know the total data set size and the size of each split on the distributed
-nodes. The OBLB variant presented here does not require the total data set
-size to be known, nor the size of splits, and in fact the data can be
-unbounded.
+This paper presents an exact, nonparametric distributed bootstrap method for
+bounded data and an online variant that may be used on unbounded streaming
+data. The exact distributed bootstrap procedure is to split a finite data set
+among nodes of a distributed computer system; asynchronously execute standard,
+non-parametric bootstrap resampling of a (possibly multivariate) statistic on
+each node; output the statistic and associated weights from each bootstrap
+iteration on each node to a master node; and on the master node aggregate the
+statistic in each bootstrap bucket. The final product is a bootstrap sample
+distribution of the statistic. For exactness, the method requires an exact
+update rule for the statistic under study on the master node. I demonstrate
+this with a canonical weighted mean and weighted standard deviation update
+rule example. The method is still viable and handy but becomes approximate
+when the update rule is itself not exact.  I explore an online variant of the
+exact distributed bootstrap, which permits real-time updates of the bootstrap
+distribution on each node and on the master node.
 
 \end{abstract}
 
 \section{Introduction}
 
-The original nonparametric bootstrap is by \cite{bib:efron}. This involves resampling $n$ data points with replacement
-$n$ times in $r$ total iterations, where $r \gtrsim 200$. An analysis pipeline
-is executed at each bootstrap iteration, and a histogram of a resulting
-statistic is built up in the process. The histogram is an estimator of the
-sample distribution of that statistic. As a result, the mean of the bootstrap
-distribution is an estimate of the sample mean; the standard deviation is an
-estimate of the standard error on the mean; confidence intervals are computed
-on the histograms directly; and covariance on multivariate statistics can be
-computed on the joint bootstrap distribution directly.
+The nonparametric bootstrap \cite{bib:efron} is incredibly useful for
+empirically estimating sampling distributions where closed form sample summary
+statistics may be inaccurate or unavailable.  Given a data set of size $n$,
+the method is to randomly sample $n$ data points with replacement in $r$ total
+iterations, where $r \gtrsim 200$, and execute an analysis pipeline to produce
+a statistic at each iteration. The histogram of the statistic from each
+iteration is an estimate of the sample distribution of that statistic. For
+example, the mean of the bootstrap distribution is an estimate of the sample
+mean; the standard deviation is an estimate of the standard error on the mean;
+confidence intervals are computed on the histograms directly; and covariance
+on a multivariate statistic can also be computed on the joint bootstrap
+distribution directly.
 
-\cite{bib:mofnboot} describes methods of subsampling $m$ out of $n$ points and bootstrapping for sample distribution estimates.  Subsampling alters the sample distribution so analytic corrections have to be applied.  In the OBLB we subsample the original data to size $m$ randomly without replacement.  The standard deviation of the final bootstrap must then be corrected by the factor $\sqrt{m}$.
+The online bootstrap sketched by \cite{bib:onlineboot} is a variant of the
+bootstrap that processes one data point at a time.  The essential observations
+are that a single given data point is sampled in $n$ trials with probability
+$1/n$ per trial in a single bootstrap iteration, so the number of samples for
+each data point is distributed as $Binomial(n,1/n)$; and for moderate to large
+$n$, $Binomial(n,1/n)$ converges to $Poisson(1)$.  Turning this logic around,
+given a single data point in a given bootstrap iteration, using an importance
+weight $w$ drawn randomly from $Poisson(1)$ emulates the bootstrap resampling.
+If the data point already has an importance weight $w^{\prime}$, then the
+final online bootstrap resample importance weight is $W = w^{\prime}w$.
 
-The online bootstrap (OB) is sketched by \cite{bib:onlineboot} and is
-incorporated into Vowpal Wabbit. Those authors noted that the number of times
-a single data point is resampled in one iteration of the traditional bootstrap
-is distributed as $Poisson(\lambda = 1)$ for reasonable $r$. This suggests
-using an importance weight $W = w^{\prime}w$ for each data point in a stream,
-where $w^{\prime}$ is the input importance weight of the data point and $w
-\sim Poisson(\lambda = 1)$ is a weight that emulates bootstrap resampling.
+The Bag of Little Bootstraps is a variant of the bootstrap that can be run on distributed 
+data \cite{bib:blb}. In this setting, the larger data set of size $n$ is randomly distributed or ``split''
+across $s$ nodes, and each split has size $b$.  
 
-The Bag of Little Bootstraps is by \cite{bib:blb}. These authors had in mind
+These authors had in mind
 big data that is split across nodes, such as on the Hadoop Filesystem. The BLB
 procedure is to run the bootstrap on each node that can locally access,
 compute a statistic (e.g.\ the mean, confidence interval) on each bootstrap
@@ -108,7 +121,9 @@ and then average each summary statistic, which speeds up the algorithm but
 doesn't allow for the mining of additional bootstrap distribution summary
 statistics after the fact.
 
-\section{The Algorithm}
+\section{The Algorithms}
+
+\subsection{Exact Distributed Bootstrap}
 
 Given that $r$ is typically chosen to be of order $10^2$ to $10^4$ or so, it's
 reasonable to aggregate and persist $r$ bootstrap buckets on a node or set of
@@ -117,77 +132,87 @@ nodes using an online bootstrap bucket update rule.
 The inner bootstraps require an online update rule that respects importance
 weights. The outer bootstrap aggregator requires a different
 
-Algorithm \ref{onlineblb} outlines the OBLB idea.
+Algorithm \ref{algo:exact} outlines the OBLB idea.
+
+\begin{algorithm}
+\caption{Exact batch distributed bootstrap}
+\label{algo:exact}
+\DontPrintSemicolon
+\SetKwFunction{InnerBatchUpdate}{InnerBatchUpdate}
+\SetKwFunction{MasterBatchUpdate}{MasterBatchUpdate}
+\SetKwFunction{MultinomialRandom}{MultinomialRandom}
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+\Input{Bounded data-weight tuples, $\{(X_1,w^{\prime}_1), (X_2,w^{\prime}_2), ..., (X_n,w^{\prime}_n)\}$
+    \\
+    Number of bootstrap realizations, $r$
+    \\
+    Number of nodes, $s$
+    \\
+    Size of data subset that is local to node $j\in \{1,2, ..., s\}$, $b_j$ 
+}
+\Output{Estimator value in each bootstrap realization, $\hat\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$}
+\For{$j \gets 1$ \KwTo $s$}{
+    Retrieve local set of data-weight tuples, $(\boldsymbol{X}_j,\boldsymbol{w}_j)$\;
+    Compute $b_j$\;
+    \For{$k \gets 1$ \KwTo $r$}{
+        $\boldsymbol{W} \gets \boldsymbol{w}^{\prime}_j \cdot \MultinomialRandom(b_j,\boldsymbol{1}_{b_j}/b_j)$\;
+        $(\hat\theta_{jk}, w_{jk}) \gets \InnerBatchUpdate(\boldsymbol{X}_j, \boldsymbol{W})$\;
+    }
+}
+\For{$k \gets 1$ \KwTo $r$}{
+    $\hat\theta_{k} \gets \MasterBatchUpdate(\hat\theta_{jk}, w_{jk})$\;
+}
+\Return $\boldsymbol{\hat\theta}$
+\end{algorithm}
+
+
+\subsection{Online Distributed Bootstrap}
 
 \begin{algorithm}
 \caption{Online distributed bootstrap}
-\label{onlineblb}
-\begin{algorithmic}[1]
-\Require \\
-Unbounded set of data-weight tuples $\{(X_1,w^{\prime}_1), (X_2,w^{\prime}_2), ...\}$\\
-Subsample rate $p\in(0,1]$\\
-Number of bootstrap buckets $r$\\
-Data split nodes $\{1,2, ..., s\}$, plus a master bootstrap node\\
-Online estimator update rule OnlineUpdate
-\Ensure \\
-Estimator value in each bootstrap bucket, $\hat\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$
-\Procedure{Online Distributed Bootstrap}{}
-\State // Initialize the estimators and weights.
-\For{each bootstrap instance $k \gets 1$ to $r$}
-\State $w_{k} \gets 0$
-\State $\hat\theta_{k} \gets 0$
-\State // $s$ nodes maintain independent bootstrap buckets $\hat\theta_{jk}$ with associated weights $w_{jk}$.
-\For{each node $j \gets 1$ to $s$}
-\State $w_{jk} \gets 0$
-\State $\hat\theta_{jk} \gets 0$
-\EndFor
-\EndFor
-\State // Stream through the data.
-\For{each $i \gets 1$ to $\infty$}
-\If{$Unif(0,1)<p$}
-\State Randomly assign tuple $(X_i,w^{\prime}_i)$ to node $j \in \{1, 2, ..., s\}$
-\State // $s$ nodes maintain $r$ independent bootstraps.
-\State // Update the bootstrap buckets on node $j$:
-\For{each $k \gets 1$ to $r$}
-\State $W \gets w^{\prime}_i \times Poisson(\lambda = 1)$
-\State $(\hat\theta_{jk}, w_{jk}) \gets \mathrm{OnlineUpdate}(\hat\theta_{jk}, w_{jk}, X_i, W)$
-\EndFor
-\If{UpdateMaster()}
-\State // Another node maintains $r$ master bootstrap aggregates.
-\State // Update the bootstrap buckets on the master bootstrap node:
-\For{each $k \gets 1$ to $r$}
-\State $(\hat\theta_{k}, w_{k}) \gets \mathrm{OnlineMasterUpdate}(\hat\theta_{k}, w_{k},\hat\theta_{jk}, w_{jk})$
-\State $w_{jk} \gets 0$
-\State $\hat\theta_{jk} \gets 0$
-\EndFor
-\EndIf
-\EndIf
-\EndFor
-\EndProcedure
-\end{algorithmic}
-\end{algorithm}
-
-Algorithm \ref{onlineupdate} is an example online update rule. Another example
-from a machine learning application is the Vowpal Wabbit online trainer.
-
-\begin{algorithm}
-\caption{OnlineUpdate example: streaming mean}
-\label{onlineupdate}
-\begin{algorithmic}[1]
-\Require \\
-Current mean $\theta_0$ \\
-Aggregate weight of current mean $w_0$ \\
-New data $X$ \\
-Weight of new data $w$
-\Ensure \\
-Updated mean $\theta_1$ \\
-Aggregate weight of updated mean $w_1$
-\Procedure{OnlineUpdate}{}
-\State $\theta_1 \gets (w_0\theta_0 + WX)/(w_0 + W)$
-\State $w_1 \gets w_0 + W$ 
-\State \Return $(\theta_1, w_1)$
-\EndProcedure
-\end{algorithmic}
+\label{algo:online}
+\DontPrintSemicolon
+\SetKwFunction{InnerOnlineUpdate}{InnerOnlineUpdate}
+\SetKwFunction{MasterOnlineUpdate}{MasterOnlineUpdate}
+\SetKwFunction{PoissonRandom}{PoissonRandom}
+\SetKwFunction{UpdateMaster}{UpdateMaster}
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+\Begin{
+    \Input{Unbounded data-weight tuples, $\{(X_1,w^{\prime}_1), (X_2,w^{\prime}_2), ...\}$
+        \\
+        Number of bootstrap realizations, $r$
+        \\
+        Number of nodes, $s$
+        \\
+        Online estimator update rule OnlineUpdate
+    }
+    \Output{Estimator value in each bootstrap bucket, $\hat\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$}
+    \For{$k \gets 1$ \KwTo $r$}{
+      $w_{k} \gets 0$\;
+      $\hat\theta_{k} \gets 0$\;
+      \For{$k \gets 1$ to $r$}{
+        $w_{jk} \gets 0$\;
+        $\hat\theta_{jk} \gets 0$\;
+      }
+    }
+    \For{$i \gets 1$ to $\infty$}{
+      Assign tuple $(X_i,w^{\prime}_i)$ to node $j \in \{1, 2, ..., s\}$\;
+      \For{$k \gets 1$ to $r$}{
+        $W \gets w^{\prime}_i \times \PoissonRandom(\lambda = 1)$\;
+        $(\hat\theta_{jk}, w_{jk}) \gets \InnerOnlineUpdate(\hat\theta_{jk}, w_{jk}, X_i, W)$\;
+      }
+      \If{$\UpdateMaster()$} {
+        \For{$k \gets 1$ to $r$}{
+          $(\hat\theta_{k}, w_{k}) \gets \MasterOnlineUpdate(\hat\theta_{k}, w_{k},\hat\theta_{jk}, w_{jk})$\;
+          $w_{jk} \gets 0$
+          \\
+          $\hat\theta_{jk} \gets 0$
+        }
+      }
+    }
+}
 \end{algorithm}
 
 A flowchart is shown in Figure \ref{oblbflowchart}.
@@ -284,6 +309,40 @@ Maintains bootstrap histogram & Yes & Yes & No & Yes \\
 \section{Simulations}
 
 \subsection{Sample Mean}
+
+Algorithm \ref{onlineupdate} is a canonical example of an online update rule: the weighted mean. 
+The weighted mean can be computed on streaming data by maintaining the mean and the aggregate
+weight. The unweighted mean is the limiting case where the data weights are all one.
+
+\begin{algorithm}
+\caption{OnlineUpdate example: streaming weighted mean}
+\label{onlineupdate}
+\DontPrintSemicolon
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+\Input{Current mean $\theta_0$
+  \\
+  Aggregate weight of current mean $w_0$ 
+  \\
+  New data $X$
+  \\
+  Weight of new data $W$
+}
+\Output{Updated mean $\theta_1$
+    \\
+    Aggregate weight of updated mean $w_1$
+}
+$\theta_1 \gets (w_0\theta_0 + WX)/(w_0 + W)$
+\\
+$w_1 \gets w_0 + W$ 
+\\
+\Return $(\theta_1, w_1)$
+\end{algorithm}
+
+If both OnlineUpdate and OnlineMasterUpdate use the online weighted mean algorithm, 
+then OBLB is equivalent to the traditional, serial, nonparametric 
+bootstrap of the weighted mean, up to numerical errors at the machine precision
+level.
 
 \subsection{Online Logistic Regression Trainer}
 

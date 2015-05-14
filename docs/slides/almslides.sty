@@ -1,0 +1,976 @@
+\ProvidesPackage{main}
+
+\let\fref\@undefined % redefined by fancyref
+
+\RequirePackage{ucs}
+\RequirePackage{mathpartir}
+\RequirePackage{plstx}
+\RequirePackage{crush}
+\RequirePackage[final]{listings}
+\RequirePackage{amsmath,amssymb,amsthm}
+\RequirePackage{xcolor}
+\RequirePackage{tikz}
+%\RequirePackage{bookmark}
+
+%%%
+%%% wrapping macro definers
+%%%
+
+\def\wrapnew[#1]#2{%
+  \@ifnextchar [
+    {\wrapnew@args{#1}{#2}}
+    {\wr@pnew{#1}{#2}}%
+}
+\def\wrapnew@args#1#2[#3]{%
+  \@ifnextchar [
+    {\wrapnew@opt{#1}{#2[#3]}}
+    {\wr@pnew{#1}{#2}}%
+}
+\def\wrapnew@opt#1#2[#3]{\wr@pnew{#1}{#2[#3]}}
+\def\wr@pnew#1#2#3{\newcommand*#2{#1{#3}}}
+
+\newcommand\compose[3]{#1{#2{#3}}}
+
+\def\newmath{\wrapnew[\ensuremath]}
+\def\newmathrel{\wrapnew[\compose\ensuremath\mathrel]}
+\def\newmathbin{\wrapnew[\compose\ensuremath\mathbin]}
+\def\newmathop{\wrapnew[\compose\ensuremath\mathop]}
+\def\newmathord{\wrapnew[\compose\ensuremath\mathord]}
+
+\newcommand\newrmop[2]{\newmathop{#1}{\textrm{\upshape #2}}}
+\newcommand\newrmoppar[2]{%
+  \newcommand{#1}[1]{\ensuremath{\textrm{\upshape #2}(##1)}}%
+}
+
+\newcommand\pdfstringortex[2]{\texorpdfstring{#2}{#1}}
+\def\newpdfstringortex#1#2{%
+  \wrapnew[\compose{\pdfstringortex{#2}}\ensuremath]{#1}%
+}
+
+%%%
+%%% fake bm
+%%%
+
+\newcommand\bm[1]{%
+  \crushl{#1}\mskip.43mu\crushl{#1}\mskip.43mu{#1}%
+}
+
+%%%
+%%% mathpartir tricks
+%%%
+
+\newbox\inferpunct@box
+\newdimen\inferpunct@dim
+
+\newcommand\inferpunct[4][\relax]{
+  \setbox\inferpunct@box=\hbox{\small\scshape#1}
+  \inferpunct@dim=\wd\inferpunct@box
+  \setbox\inferpunct@box=\hbox{$
+    \displaystyle
+    \inferrule[\rlap{\usebox\inferpunct@box}]{#2}{#3}#4
+  $}
+  \usebox\inferpunct@box
+  \ifdim\inferpunct@dim > \wd\inferpunct@box
+    \advance\inferpunct@dim by -\wd\inferpunct@box
+    \kern\inferpunct@dim
+  \fi
+}
+
+%%%
+%%% ucs setup
+%%%
+
+% Use math greek
+\SetUnicodeOption{mathletters}
+% Use math greek in math mode
+%\everymath=\expandafter{\the\everymath\SetUnicodeOption{mathletters}}
+
+\DeclareUnicodeCharacter{10214}{\llbracket}
+\DeclareUnicodeCharacter{10215}{\rrbracket}
+\DeclareUnicodeCharacter{8669}{\leadsto}
+\DeclareUnicodeCharacter{8896}{\wedge}
+\DeclareUnicodeCharacter{8897}{\vee}
+\DeclareUnicodeCharacter{34195}{\uparrow}
+\DeclareUnicodeCharacter{34197}{\downarrow}
+
+%%%
+%%% listings setup
+%%%
+
+\newdimen\codeindent
+\codeindent=\parindent
+
+\newcommand\syntaxfontreset{\ttfamily\mdseries\upshape\color{black}}
+\newcommand\keywordstyle{\syntaxfontreset\color{orange!70!black}}
+\newcommand\calckeywordstyle{\syntaxfontreset}
+\newcommand\typestyle{\syntaxfontreset\color{green!50!black}}
+\newcommand\optypestyle{\syntaxfontreset\color{cyan!70!black}}
+\newcommand\kindstyle{\syntaxfontreset\color{violet!80!black}}
+\newcommand\qualstyle{\kindstyle}
+\newcommand\statestyle{\syntaxfontreset\color{violet!80!black}}
+\newcommand\varstyle{\syntaxfontreset}
+\newcommand\aftvsigilstyle{\syntaxfontreset\bfseries\color{DarkRed}}
+\newcommand\untvsigilstyle{\syntaxfontreset\bfseries}
+\newcommand\constyle{\syntaxfontreset\color{red!70!black}}
+\newcommand\datastyle{\constyle}
+
+\newcommand\textK[1]{\text{\keywordstyle#1}}
+\newcommand\textCK[1]{\text{\calckeywordstyle#1}}
+\newcommand\textT[1]{\text{\typestyle#1}}
+\newcommand\textOT[1]{\text{\optypestyle#1}}
+\newcommand\textKN[1]{\text{\kindstyle#1}}
+\newcommand\textQ[1]{\text{\qualstyle#1}}
+\newcommand\textST[1]{\text{\statestyle#1}}
+\newcommand\textV[1]{\text{\varstyle#1}}
+\newcommand\textC[1]{\text{\constyle#1}}
+\newcommand\textATVS[1]{\text{\aftvsigilstyle#1}}
+\newcommand\textUTVS[1]{\text{\untvsigilstyle#1}}
+\newcommand\textD[1]{\text{\datastyle#1}}
+\newcommand\textS[1]{\textD{``#1''}}
+
+\newmathbin\with{\textT{\&}}
+\newmathord\oc{\textKN{!}}
+\newmathord\wn{\textKN{?}}
+\newmathbin\parr{
+  \tikz \node[
+    rotate=180,
+    anchor=center,
+    inner sep=0pt,
+  ] {\textT{\&}};
+}
+\newmath\bigwith{
+  \mathchoice
+    {\raisebox{-3pt}{\textT{\Large\&}}}
+    {\textT{\&}}
+    {\textT{\small\&}}
+    {\textT{\tiny\&}}
+}
+
+\newmath\SOR{\mathrel\Vert}
+\newcommand\SWITH[1]{\underline\with\big\langle\,#1\,\big\rangle}
+\newcommand\SPLUS[1]{\underline{\textstyle\bigoplus}\big\langle\,#1\,\big\rangle}
+\newmathbin\Swith{\text{\underline{\optypestyle\&}}}
+\newmathbin\Splus{\text{\underline{\optypestyle+}}}
+\newmathbin\Ssemi{\text{\underline{\optypestyle;}}}
+\newmathbin\Ssend{\text{\underline{\optypestyle!}}}
+\newmathbin\Srecv{\text{\underline{\optypestyle?}}}
+
+\lstset{%
+  keywordstyle=\keywordstyle,
+  keywordstyle=[2]\typestyle,
+  keywordstyle=[3]\qualstyle,
+  keywordstyle=[4]\constyle,
+  identifierstyle=\varstyle,
+  stringstyle=\datastyle,
+  commentstyle=\rmfamily\itshape,
+  columns=fullflexible,
+  xleftmargin=\codeindent,
+}
+
+\lstdefinelanguage{Alms}
+  {morekeywords={fun,function,if,then,else,match,with,as,try,local,open,%
+    exception,let,rec,and,in,abstype,end,module,struct,sig,val,%
+    include,all,ex,mu,of,type,qualifier,shift,reset,blame,raise,%
+    derelict,promote,for,},
+  morekeywords=[2]{int,unit,mvar,string,file,event,thread,%
+    array,bool,contract,party,list,OPAQUE,opaque,true,false,%
+    cap,arraycap,either,Q,raw,named,listening,ready,sock,dynamicCap,%
+    option,region,regionCap,ref,aref,regcap,ptr,rgn1,rgn,rgnG,%
+    dual,done,rendezvous,channel,chan,listU,listA,AF_ARRAY,CAP_ARRAY,%
+    LOCK_ARRAY,SESSION_TYPES},
+  morekeywords=[3]{A,U,L,R},
+  morekeywords=[4]{Left,Right,Next,Done,Cons,Nil,ConsU,NilU,ConsA,NilA},
+  morekeywords=[4]{Request,Reject,Offer,Accept,Resource,None,Some},
+  mathescape=true,
+  sensitive,
+  extendedchars=true,
+  morecomment=[l]{--},
+  morestring=[b]",%
+  moredelim=[is][\normalfont]{R:}{:},
+  moredelim=[is][\typestyle]{T:}{:},
+  moredelim=[is][\datastyle]{D:}{:},
+  moredelim=[is][\keywordstyle]{K:}{:},
+  moredelim=[is][\varstyle]{V:}{:},
+  moredelim=[is][\constyle]{C:}{:},
+  moredelim=[is][\calckeywordstyle]{CK:}{:},
+  moredelim=[is][\qualstyle]{Q:}{:},
+  moredelim=[is][\statestyle]{ST:}{:},
+  moredelim=[is][\kindstyle]{KN:}{:},
+  literate=
+    {~}{{$\text{ }$}}1
+    {\\/}{\textKN{$\vee$} }2
+    {JOIN}{ \textKN{$\sqcup$} }3
+    {@}{{\textT @}}1
+    {⊕}{$\oplus$ }2
+    {:>}{{$:>$ }}2
+    {->}{{$\to$ }}2
+    {=>}{{$\Rightarrow$ }}2
+    {-o}{{$\multimap$ }}2
+    {otimes}{{\textV{$\otimes$} }}2
+    {⇝}{{$\leadsto$ }}2
+    {<+}{{$\{\!+$ }}3
+    {+>}{{$+\!\}$ }}3
+    {<-}{{$\gets$ }}2
+    {<->}{{$\leftrightarrow$ }}2
+    {Pi}{{\textK{$\Pi$}}}1
+    {KN<}{{\textKN{$\langle$}}}1
+    {KN>}{{\textKN{$\rangle$}}}1
+    %{<->}{{$\mathrel{\crushl{\gets}\mskip4mu{\gets}}$ }}2
+    {-A>}{{$\tosup{\text{\qualstyle A}}$ }}2
+    {-U>}{{$\tosup{\text{\qualstyle U}}$ }}2
+    {-c>}{{$\tosup{\text{\aftv c}}$ }}2
+    {-d>}{{$\tosup{\text{\aftv d}}$ }}2
+    {-e>}{{$\tosup{\text{\aftv e}}$ }}2
+    {-de>}{{$\tosup{\text{\aftv d$\vee$\aftv e}}$ }}2
+    {⟨}{{$\langle$}}1
+    {⟩}{{$\rangle$}}1
+    {NIL}{{\textC{[]}}}1
+    {CONS}{{\textC{::}}}1
+    {→}{{$\to$ }}3
+    {≤}{{$\le$ }}1
+    {≥}{{$\ge$ }}1
+    {≠}{{$\ne$ }}1
+    {§}{$\mbox{\vbox to 1.4em{}}$}1
+    {¶}{$\mbox{\vbox to 1.8em{}}$}1
+    {!}{{$\oc$}}1
+    {?}{{$\wn$}}1
+    {!!}{{$\lightning$}}1
+    {S!}{{\Ssend}}1
+    {S?}{{\Srecv}}1
+    {S+}{{\Splus{}}}1
+    {S&}{{\Swith{}}}1
+    {S;}{{\Ssemi}}1
+    {S~+}{{${\sim}${\Splus}}}2
+    {S~&}{{${\sim}${\Swith}}}2
+    {∀}{{\keywordstyle$\bm\forall\thinspace$}}1
+    {∃}{{\keywordstyle$\bm\exists\thinspace$}}1
+    {μ}{{\keywordstyle$\bm\othermu\thinspace$}}1
+    {*}{{\textV{×} }}2
+    {+}{{\textV{+} }}2
+    {V+}{+}1
+    {(*}{{$(\ast$ }}3
+    {*)}{{ $\ast)$}}3
+    {(→)}{{($\to$) }}3
+    {(*)}{{(\textV{×}) }}3
+    {(+)}{{(\textV{+}) }}3
+    {|}{{$\,\mid\;\;$}}1
+    {||}{{\textK{|\kern-1pt|}} }3
+    {&&}{{\textK{\&\kern-1pt\&}} }3
+    {λ}{{$\bm\otherlambda$ }}2
+    {lambda}{{\textK{$\bm\lambda$}\,}}2
+    {`}{{\aftvsigilstyle``}}1 {'}{{\untvsigilstyle'}}1
+    {′}{{$^\prime$}}1
+    {<<}{{$\triangleleft$}}2
+    {>>}{{$\triangleright$}}2
+    {DOLLAR}{{\$}}1
+    {₀}{{$_0$}}1 {₁}{{$_1$}}1 {₂}{{$_2$}}1 {₃}{{$_3$}}1 {₄}{{$_4$}}1
+    {₅}{{$_5$}}1 {₆}{{$_6$}}1 {₇}{{$_7$}}1 {₈}{{$_8$}}1 {₉}{{$_9$}}1%
+  }[keywords,comments,strings]
+
+\lstset{language=Alms}
+
+\lstnewenvironment{Alms}
+{%
+  \vspace{-0.9\baselineskip}%
+  \lstset{language=Alms}%
+}
+{%
+}
+
+\newcommand{\textalms}{%
+  \lstset{language=Alms}%
+  \lstinline%
+}
+
+\newcommand\AlmsDefs{%
+  \let\A\textalms
+  \let\CK\textCK
+  \let\K\textK
+  \let\V\textV
+  \let\C\textC
+  \let\Q\textQ
+  \let\ST\textST
+  \let\T\textT
+  \let\KN\textKN
+  \let\D\textD
+  \let\S\textS
+  \newcommand\CCOM[1]{/* \textrm{\itshape ##1} */}%
+  \newcommand\MCOM[1]{(* \textrm{\itshape ##1} *)}%
+  \newcommand\CODECOM[1]{(*~\A{##1}~*)}
+  \newcommand\CHK[2][-]{\textOT{\###1}~\A{##2} \\}%
+  \newcommand\RES[2][it]{\V{##1} : \A{##2} \\[.6em]}%
+  \newmath\qU{{}^{\ST U}}%
+  \newmath\qR{{}^{\ST R}}%
+  \newmath\qA{{}^{\ST A}}%
+  \newmath\qL{{}^{\ST L}}%
+}
+
+\newcounter{dotimesI}
+\newcommand\dotimes[2]{
+  \forloop{dotimesI}{0}{\value{dotimesI} < #1}{#2}
+}
+
+\newenvironment{Alms*}
+{%
+  \setlength{\topsep}{0pt}%
+  \setlength{\partopsep}{0pt}%
+  \newcommand\I{~~\=\+}%
+  \newcommand\NI[1][0pt]{\\[##1]\pushtabs\I\ignorespaces}%
+  \newcommand\ND[1][0pt]{\-\\[##1]\poptabs\ignorespaces}%
+  \newcommand\NDN[2][0pt]{%
+    \dotimes{##2}\-\\[##1]\dotimes{##2}\poptabs\ignorespaces
+  }%
+  \AlmsDefs
+  \ttfamily\color{black!60!white}%
+  \begin{tabbing}%
+  \hskip\codeindent\=\+
+}
+{%
+  \end{tabbing}%
+}
+
+%%%
+%%% plstx setup
+%%%
+
+\plstxset{
+    label style=\textrm
+}
+
+%%%
+%%% Prerendering math symbols
+%%%
+
+\newcommand\prerender@name[2]{prerendered\string#1@#2}
+
+\newcommand\prerendercommand[1]{%
+  \@ifnextchar [{\prerendercomm@nd{#1}}{\prerendercomm@nd{#1}[]}%
+}
+
+\def\prerendercomm@nd#1[#2]#3{%
+  \expandafter\newbox\csname\prerender@name{#1}{display}\endcsname
+  \expandafter\newbox\csname\prerender@name{#1}{text}\endcsname
+  \expandafter\newbox\csname\prerender@name{#1}{script}\endcsname
+  \expandafter\newbox\csname\prerender@name{#1}{scriptscript}\endcsname
+  \edef#1{
+    #2{
+      \noexpand\mathchoice
+        {\noexpand\usebox\csname\prerender@name{#1}{display}\endcsname}
+        {\noexpand\usebox\csname\prerender@name{#1}{text}\endcsname}
+        {\noexpand\usebox\csname\prerender@name{#1}{script}\endcsname}
+        {\noexpand\usebox\csname\prerender@name{#1}{scriptscript}\endcsname}
+    }
+  }%
+  \AtBeginDocument{%
+    \expandafter\setbox\csname\prerender@name{#1}{display}\endcsname
+      \hbox{$\displaystyle#3$}%
+    \expandafter\setbox\csname\prerender@name{#1}{text}\endcsname
+      \hbox{$\textstyle#3$}%
+    \expandafter\setbox\csname\prerender@name{#1}{script}\endcsname
+      \hbox{$\scriptstyle#3$}%
+    \expandafter\setbox\csname\prerender@name{#1}{scriptscript}\endcsname
+      \hbox{$\scriptscriptstyle#3$}%
+  }%
+}
+
+%%%
+%%% TikZ
+%%%
+
+\newcommand\tikzanchor[2][\strut]{%
+  \begin{tikzpicture}[orp]
+    \node[inner sep=0pt](#2){#1};
+  \end{tikzpicture}%
+}
+
+\newcommand\tikzspan[2]{\tikzanchor{#1 begin}#2\tikzanchor{#1 end}}
+
+\newcommand<>\makeStrike[2][]{%
+  \uncover#3{%
+    \begin{tikzpicture}[orp]
+      \draw[color=orange,opacity=.8,line width=0.5ex,#1]
+        (#2 begin.center) -- (#2 end.center)
+        ;
+    \end{tikzpicture}%
+  }%
+}
+
+\newcommand<>\makeCircle[2][]{%
+  \uncover#3{%
+    \begin{tikzpicture}[orp]
+      \draw[
+        color=red!40!black,
+        draw opacity=0.5,
+        fill=yellow,
+        fill opacity=0.2,
+        rounded corners=1pt,
+        #1
+      ]
+        ($(#2 begin.north) + (-2pt,2pt)$) --
+        ($(#2 end.north) + (2pt,2pt)$) --
+        ($(#2 end.base) + (2pt,-2pt)$) --
+        ($(#2 begin.base) + (-2pt,-2pt)$) --
+        cycle
+        ;
+    \end{tikzpicture}%
+  }%
+}
+
+\newcommand<>\fitHighlight[1][2pt]{
+  \fit@Highlight{#1}{#2}
+}
+
+\newcount\fitHL@count
+\newcommand\fitHighlights[2][1]{%
+  \fitHL@count=#1\relax
+  \foreach\fitHL@nodes in {#2}
+  {\fitHighlight<\fitHL@count>\fitHL@nodes;%
+   \global\advance\fitHL@count by 1}}
+
+\def\fit@Highlight#1#2#3;{
+  \begin{scope}[on background layer]
+    \node#2[
+      overlay,
+      inner sep=#1,
+      fit=#3,
+      highlight,
+    ] {};
+  \end{scope}
+}
+
+\newcommand<>\highlight[2][\relax]{%
+  \ifx#1\relax
+    \begin{tikzpicture}
+  \else
+    \begin{tikzpicture}[remember picture]
+  \fi
+    \node[
+      inner sep=0pt,
+      outer sep=0pt,
+      text depth=0pt,
+      align=left,
+    ] (highlight temp) {#2};
+    \begin{scope}[on background layer]
+      \coordinate (highlight temp 1) at
+        ($(highlight temp.north east) + (2pt,2pt)$);
+      \coordinate (highlight temp 2) at
+        ($(highlight temp.base west) + (-2pt,-3pt)$);
+      \node#3 [
+        overlay,
+        highlight,
+        inner sep=0pt,
+        fit=(highlight temp 1) (highlight temp 2),
+      ] {};
+    \end{scope}
+    \ifx#1\relax
+      \relax
+    \else
+      \node (#1) [
+        overlay,
+        inner sep=0pt,
+        fit=(highlight temp 1) (highlight temp 2),
+      ] {};
+    \fi
+  \end{tikzpicture}%
+}
+
+\newcommand\huncover[3][\relax]{%
+  \uncover<#2->{\highlight<#2>[#1]{#3}}%
+}
+\newcommand\honly[3][\relax]{%
+  \only<#2->{\highlight<#2>[#1]{#3}}%
+}
+
+
+\newcommand<>\makeArrow[4][]{%
+  \uncover#5{%
+    \begin{tikzpicture}[orp]
+      \draw[pointing,#1]
+        (#2) .. controls #3 .. (#4)
+        ;
+    \end{tikzpicture}%
+  }%
+}
+
+%%%
+%%% symbols implemented in TikZ
+%%%
+
+\usetikzlibrary{positioning,chains,arrows,calc,shapes.symbols,intersections}
+
+\tikzset{
+  parred/.style={
+    line width=0.057em,
+    line join=bevel,
+    baseline=-0.278em,
+  },
+  orp/.style={
+    overlay,
+    remember picture,
+  },
+  highlight/.style={
+    color=yellow!50!white!90!black,
+    thick,
+    draw,
+    draw opacity=0.5,
+    outer color=yellow!50,
+    inner color=yellow!30,
+    rounded corners=2pt,
+  }
+}
+
+\newcommand\makealtequiv[1][0.5em]{
+  \begin{tikzpicture}[parred]
+    \draw (0,0.176em) -- +(#1,0)
+          (0,0) -- +(#1,0)
+          (0,-0.176em) -- +(#1,0);
+  \end{tikzpicture}
+}
+
+
+\newcommand\makeequivarrhead[1][1]{
+  \begin{tikzpicture}[parred,xscale=#1]
+    \draw (-0.1em,0) -- +(0.3em,0)
+          (-0.1em,0.25em)
+      .. controls (0.1em,0.084em) and (0.15em,0.05em) .. (0.25em,0)
+      .. controls (0.15em,-0.05em) and (0.1em,-0.084em) ..  (-0.1em,-0.25em)
+      .. controls (0.2em,0) .. (-0.1em,0.25em)
+    ;
+  \end{tikzpicture}
+}
+
+\prerendercommand\altequiv[\mathrel]{\makealtequiv}
+\prerendercommand\equivrightarrhead{\makeequivarrhead[0.9]}
+\prerendercommand\equivleftarrhead{\makeequivarrhead[-0.9]}
+\let\equiv\altequiv
+
+\prerendercommand\rightequiv[\mathrel]
+  {{\altequiv}\mskip-2.8mu{\equivrightarrhead}}
+\prerendercommand\leftequiv[\mathrel]
+  {{\equivleftarrhead}\mskip-2.8mu{\altequiv}}
+\prerendercommand\leftrightequiv[\mathrel]
+  {{\equivleftarrhead}\mskip-2.8mu{\altequiv}\mskip-2.8mu{\equivrightarrhead}}
+
+%%%
+%%% Calculus names
+%%%
+
+\newpdfstringortex\URAL
+  {λURAL}
+  {\lambda^{\textsf{URAL}}}
+\newpdfstringortex\rgnUL
+  {λrgnUL}
+  {\lambda^{\textsf{rgnUL}}}
+\newpdfstringortex\cURAL
+  {λURAL(C)}
+  {\lambda^{\textsf{URAL}}(\bigCTag)}
+\newpdfstringortex\rgnURAL
+  {rgnURAL}
+  {\textsf{rgnURAL}}
+
+\newpdfstringortex\FPOP
+  {F°}
+  {\text{F}^\circ}
+
+\let\tagStyle\EuScript
+\newcommand\bigCTag{\tagStyle{C}}
+\newcommand\bigDTag{\tagStyle{D}}
+\newcommand\bigXTag{\tagStyle{X}}
+\newcommand\bigATag{\tagStyle{A}}
+\newcommand\cTag{{\scriptscriptstyle\bigCTag}}
+\newcommand\dTag{{\scriptscriptstyle\bigDTag}}
+\newcommand\xTag{{\scriptscriptstyle\bigXTag}}
+\newcommand\aTag{{\scriptscriptstyle\bigATag}}
+
+%%%
+%%% calculus definitions
+%%%
+
+%% General
+
+\newrmoppar\FV{FV}
+\newrmoppar\FTV{FTV}
+\newrmoppar\FLV{FL}
+\newrmoppar\FMV{FM}
+
+\newrmoppar\GEN{gen}
+
+\newrmop\dom{dom}
+\newrmop\cod{cod}
+
+\def\OCC#1{\mathop{\mathrm{occ}_{#1}}}
+\def\VAR#1{\mathop{\mathrm{var}_{#1}}}
+
+\def\LAT#1{\mathfrak{#1}}
+\def\KW#1{\ensuremath{\mathop{\mathsf{#1}}\nolimits}}
+\def\QUALIFIER#1{\ensuremath{\mathord{\mathsf{#1}}}}
+
+\def\BLAME{\KW{blame}}
+\def\CASE{\KW{case}}
+\def\DELETE{\KW{delete}}
+\def\EXNTY{\KW{exn}}
+\def\FIX{\KW{fix}}
+\def\HANDLE{\KW{handle}}
+\def\IGNORE{\KW{ignore}}
+\def\INL{\KW{inl}}
+\def\INR{\KW{inr}}
+\def\INK{\ensuremath{\mathop{\mathsf{in}_k}\nolimits}}
+\def\IN{\KW{in}}
+\def\LET{\KW{let}}
+\def\MODULE{\KW{module}}
+\def\NEW{\KW{new}}
+\def\OF{\KW{of}}
+\def\PTR{\KW{ptr}}
+\def\QA{\QUALIFIER{A}}
+\def\QL{\QUALIFIER{L}}
+\def\QR{\QUALIFIER{R}}
+\def\QU{\QUALIFIER{U}}
+\def\RAISE{\KW{raise}}
+\def\READ{\KW{read}}
+\def\REF{\KW{ref}}
+\def\RESET{\KW{reset}}
+\def\SHIFT{\KW{shift}}
+\def\SWAP{\KW{swap}}
+\def\UNCURRY{\KW{uncurry}}
+\def\UNITTY{\KW{1}}
+\def\WRITE{\KW{write}}
+
+\def\NIL{\langle\kern0.5pt\rangle}
+\def\ASCPAIR#1#2{#1{:}#2}
+\def\ALLTYPE#1#2#3{\forall#1{:}#2\DOT#3}
+\def\DOT{.\thinspace}
+\def\NEWQ#1#2{\mathop{\mathsf{new}^{#1}}#2}
+\def\BLANK{\mathord{\underline{\kern0.5em}}}
+\def\HOLE{[\kern0.5pt]}
+\def\MTSTORE{\{\}}
+\def\MTENV{\bullet}
+
+%% lambda alms
+
+\newpdfstringortex\CALC
+  {aλms}
+  {{}^{\textit{a}}\mskip-4mu\lambda_{\textit{ms}}}
+\newpdfstringortex\FOMSUB
+  {Fω-sub}
+  {\text{F}^{\mskip1mu\omega}_{\mskip-2mu<\mskip-0.9mu:}}
+
+\newcommand\INVAR{{\pm}}
+\newcommand\COVAR{{+}}
+\newcommand\CNVAR{{-}}
+\newcommand\OMVAR{{\baro}}
+\newcommand\MULVAR[2]{#1 \cdot #2}
+\newcommand\LEQUALOP{\sqsubseteq}
+
+\newcommand\TVQUAL[1]{\langle#1\rangle}
+\newcommand\ARRKIND[3]{\Pi#1^{#2}\DOT#3}
+\newcommand\TLABS[2]{\lambda#1\DOT#2}
+\newcommand\ABS[3]{\lambda#1{:}#2\DOT#3}
+\newcommand\TABS[3]{\Lambda#1{:}#2\DOT#3}
+\newcommand\TAPP[2]{#1\,#2}
+\newcommand\ARRTYPE[4][\relax]{
+  #2 \ifx#1\relax \lolsup{#3}\else\lolsup[#1]{#3}\fi #4
+}
+
+\newcommand\tallrightarrow{\mathrel{{\relbar}\mskip-6mu{\rangle}}}
+\newcommand\tallleftarrow{\mathrel{{\langle}\mskip-6mu{\relbar}}}
+
+\def\ParRedOp{\rightequiv}
+\def\ParRedInvOp{\leftequiv}
+\def\ParRedSymOp{\leftrightequiv}
+\def\ParRedTransOp{\ParRedOp^{\mskip-6mu*}}
+\def\ParRedSymTransOp{\ParRedSymOp^{\mskip-6mu*}}
+\def\ParRedTransSymOp{\ParRedSymTransOp}
+
+\newcommand\concretev[1]{\ensuremath{\mathcal C_{#1}}}
+\newcommand\concrete[1]{\concretev{\text{\scshape{#1}}}}
+\newcommand\tconcretev[1]{\ensuremath{\mathcal T_{#1}}}
+\newcommand\tconcrete[1]{\tconcretev{\text{\scshape{#1}}}}
+
+\newcommand\AlmsVQCond[5]{#3 = \begin{cases}
+  #1 & #4 \in \FTV{#5}  \\
+  #2 & #4 \not\in \FTV{#5}
+\end{cases}}
+\def\AlmsVQJudg{\AlmsVQCond{\COVAR}{\OMVAR}}
+\newcommand\AlmsVJudg[4]{#1 \vdash #2 \in #3 \updownarrow #4}
+\newcommand\EJudg[2]{#1 \equiv #2}
+\newcommand\EJudgK[4]{#1 \vdash #2 \equiv #3 : #4}
+\newcommand\BJudg[3]{#1 \vdash #2 \preceq #3}
+
+\newcommand\SUBV[1]{\mathrel{{<}{:}^{#1}}}
+
+\newenvironment{withParRed}
+  {\newcommand\pr[1]{\stackrel{##1}\ParRedOp}
+   \newcommand\pri[1]{\stackrel{##1}\ParRedInvOp}
+   \newcommand\prs[1]{\stackrel{##1}\ParRedSymOp}
+   \def\prt{\ParRedTransOp}
+   \def\prst{\ParRedSymTransOp}}
+  {}
+
+\def\implinfer[#1]#2#3{\infer[\infalmsdrulename{#1}]{#2}{#3}}
+\def\implalg{$_{\textit{alg}}$}
+
+\newcommand\aQschemeformal[3]{
+  \term{a}_{#2}#3{:}\aterm{Q}_{#2}#3
+}
+
+\newcommand\aVkindformal[3]{
+  \term{a}_{#2}#3^{\aterm{V}_{#2}#3}
+}
+
+\def\iakindformal#1{
+  \@ifnextchar _
+    {\iakindformal@underscore{#1}}
+    {\@ifnextchar '
+      {\iakindformal@prime{#1}}
+      {\term a#1\relax^{\aterm V#1}}}}
+\def\iakindformal@underscore#1_#2{\iakindformal{#1_{#2}}}
+\def\iakindformal@prime#1'{\iakindformal{#1'}}
+
+%% F A and F C
+
+\newcommand\LangCMark{\mathcal C}
+\newcommand\LangAMark{\mathcal A}
+\newpdfstringortex\LangC
+  {F-C}
+  {\text F_{\LangCMark}}
+\newpdfstringortex\LangA
+  {F-A}
+  {\text F^{\LangAMark}}
+\newpdfstringortex\LangAC
+  {F-AC}
+  {\text F^{\LangAMark}_{\LangCMark}}
+
+\def\fctermtextstyle#1{\textbf{\upshape #1}}
+\def\fctermmathstyle#1{\bm{#1}}
+
+\newcommand\reductionrel[1]
+  {\mathrel{
+     {#1}
+     \mskip-21mu
+     \raisebox{-3.3pt}{$\scriptscriptstyle\mathrm M$}
+     \mskip14mu}}
+
+\newcommand\stepm{\reductionrel{\longrightarrow}}
+\newcommand\stepsm{\reductionrel{\longrightarrow\mskip-26mu\longrightarrow}}
+\newcommand\cstepm{\reductionrel{\longmapsto}}
+\newcommand\cstepsm{\reductionrel{\longmapsto\mskip-26mu\longrightarrow}}
+
+\newcommand\CAboundary[5][\relax]{\ensuremath{
+  \mathop{
+    ({\displaystyle\mathop{\Leftarrow}_{\scriptscriptstyle #2\,#3}}\;#4)
+    \ifx\relax#1 \else^{#1}\fi
+  }
+  #5
+}}
+
+\newcommand\ACboundary[5][\relax]{\ensuremath{
+  \mathop{
+    (#4\;{\displaystyle\mathop{\Leftarrow}_{\scriptscriptstyle #2\,#3}})
+    \ifx\relax#1 \else^{\bullet}\fi
+  }
+  #5
+}}
+
+\newcommand\BLESSED{\textsc{blssd}}
+\newcommand\DEFUNCT{\textsc{dfnct}}
+\newmath\BLESSEDTY{\mathbb B}
+\newmath\DEFUNCTTY{\mathbb D}
+\newmath\COERCEC{\textit{coerce}_{\LangCMark}}
+\newmath\COERCEA{\textit{coerce}_{\LangAMark}}
+\newcommand\CHECK{\textit{check}}
+
+%\newcommand\CAboundary[5][\relax]{\ensuremath{
+%  \mathord{\displaystyle\mathop{\textbf{CA}}_{#2\,#3}}
+%  \ifx\relax#1 \else[#1]\fi
+%  ^{#4}
+%  (#5)
+%}}
+
+%\newcommand\ACboundary[5][\relax]{\ensuremath{
+%  \relax^{#4}\mskip-2mu
+%  \mathord{\displaystyle\mathop{\textrm{AC}}_{#2\,#3}}
+%  \ifx\relax#1 \else[\thinspace]\fi
+%  (#5)
+%}}
+
+%% Lambda URAL and URAL(C)
+
+\newcommand\ARRFXTYPE[3]{#1 \lolsup{#2} #3}
+\newcommand\EFFECTKND{\KW{CTL}}
+\newcommand\QUALKND{\KW{QUAL}}
+\newcommand\PREKND{\overline\star}
+\newcommand\TYPEKND{\star}
+\newcommand\effectseq{\varogreaterthan}
+\newcommand\effectalt{\varobar}
+\newcommand\provesl[1]{\vdash_{\kern-4pt{\scriptscriptstyle#1}}}
+\newcommand\rprovesl[1]
+  {\mathrel{\triangleright}_{\kern-2pt{\scriptscriptstyle#1}}}
+\newcommand\nrprovesl[1]{\not\thinspace\rprovesl{#1}}
+\providecommand\llangle{\langle\kern-0.6ex\langle}
+\providecommand\rrangle{\rangle\kern-0.6ex\rangle}
+\newcommand\DOM[2][]{\llangle{#2}\rrangle^-_{#1}}
+\newcommand\COD[2][]{\llangle{#2}\rrangle^+_{#1}}
+\newcommand\PRJ[2][]{\llangle{#2}\rrangle_{#1}}
+\newcommand\DONE[1]{\mathord{\mathsf{done}_{#1}}}
+\newcommand\CPSc[3][\relax]{\llbracket#3\rrbracket_{#2}^{#1}}
+
+%%%
+%%% miscellany
+%%%
+
+\newcommand\sem[1]{\ensuremath{[\![#1]\!]}}
+
+% Bold references
+\newcommand\Bfref[1]{\textbf{\Fref{#1}}}
+\newcommand\bfref[1]{\textbf{\fref{#1}}}
+
+\newcommand\padr[2]{\uncrushr{#1}\crushr{#2}}
+\newcommand\padl[2]{\crushl{#2}\uncrushr{#1}}
+
+\newcommand\continuedIn[1]{%
+  \medskip
+  \hfill\emph{(continued in \fref{#1})}%
+}
+\newcommand\continuedFrom[1]{%
+  \par\noindent\emph{(continued from \fref{#1})}%
+  \medskip
+}
+
+% Large initial letter follows by three words in small caps
+\def\dropcap#1#2 #3 #4 {\textsc{{\LARGE #1}#2 #3 #4 }}
+
+% Index a word and print it, too
+\newcommand\ixword[1]{\index{#1}#1}
+\newcommand\ixalms[1]{\index{#1@{\varstyle #1}}}
+
+% Arrows with superscripts
+\newcommand\mymultimap{\mathrel{{\relbar}\mskip-3mu{\circ}}}
+\providecommand\multimapfill@{\arrowfill@\relbar\relbar\mymultimap}
+\newcommand{\xmultimap}[2][]{\ext@arrow 095{12}\multimapfill@{#1}{#2}}
+
+\newcommand\mapstofill@{\arrowfill@{\mapstochar\relbar}\relbar\rightarrow}
+\newcommand{\xmapsto}[2][]{\ext@arrow 0395\mapstofill@{#1}{#2}}
+
+\newcommand\twoheadmapstofill@{
+  \arrowfill@
+    {\mapstochar\relbar}
+    \relbar
+    {\mathcrushl\rightarrow\mskip3mu\rightarrow}
+}
+\newcommand{\xtwoheadmapsto}[2][]{\ext@arrow 3095\twoheadmapstofill@{#1}{#2}}
+
+\newdimen\arrowsupraise
+\arrowsupraise=-2pt
+
+\newcommand\lolsup[2][\arrowsupraise]{
+  \let\lolsupstyle\scriptstyle
+  \mathchoice{}{}
+             {\let\lolsupstyle\scriptscriptstyle}
+             {\let\lolsupstyle\scriptscriptstyle}
+  \xmultimap{\smash{\raisebox{#1}{$\lolsupstyle#2\relax$}}}
+}
+\newcommand\tosup[2][\arrowsupraise]{
+  \let\tosupstyle\scriptstyle
+  \mathchoice{}{}
+             {\let\tosupstyle\scriptscriptstyle}
+             {\let\tosupstyle\scriptscriptstyle}
+  \xrightarrow{\smash{\raisebox{#1}{$\tosupstyle#2\relax$}}}
+}
+
+\newcommand\aftv[1]{\textATVS{“}\textV{#1}}
+\newcommand\untv[1]{\textUTVS'\textV{#1}}
+
+\newcommand\tosupq[1]{\ensuremath{\tosup{\qualexp{#1}}}}
+\newcommand\qualexp[1]{
+  \let\tosuptv@sep\relax
+  \@for\tosuptv@temp:=#1\do{
+    \tosuptv@sep
+    \aftv\tosuptv@temp
+    \let\tosuptv@sep\vee
+  }
+}
+
+% Move up one line
+\newcommand\uponeline[1][1]{\vspace{-#1\baselineskip}\ignorespaces}
+
+% Typeset evaluation contexts
+\newcommand\evcxts[2]{%
+  {%
+    \def\orskip{\mskip10mu}%
+    \def\|{\orskip\vert\orskip}%
+    \def\next{\\&{\phantom{::=}\crushr{\vert}}\orskip}%
+    \begin{align*}
+      \text{where }#1\orskip&{::=}\orskip#2
+    \end{align*}%
+  }%
+}
+
+% Typeset a reduction rule
+\newcommand\redranchor[1]{(\mbox{\ranchor{#1}})}
+\newcommand\redrule[3]{&\redranchor{#1}&#2&\currentreductionrelation#3\\}
+\newcommand\redcxtrule[5]{
+  &\redranchor{#1}
+  &\frac{\hfill#2}{#4}
+   \mskip-2.1mu\crushc{\frac{\qquad}{\qquad}}
+  &\frac{\mskip1.57mu#3\hfill}{\mskip1.57mu#5}
+  \\
+}
+\newcommand\currentreductionrelation{\longmapsto}
+
+\newenvironment{redrulesection}[3][\longmapsto]
+  {\begingroup
+   \renewcommand\currentreductionrelation{#1}%
+   \begin{rulesection}{#2}{#3}}
+  {\end{rulesection}%
+   \endgroup}
+
+\newenvironment{redrulesection*}[5][\longmapsto]
+{
+  \begingroup
+    \renewcommand\redrule[4][4pt]{%
+      \redranchor{##2}
+      \>##3\'$#1##4$
+        \@ifnextchar [{
+          \redruleprem
+        }{
+          \\[##1]
+        }
+    }%
+    \def\redruleprem[##1]{\>when ##1\\[4pt]}%
+    \renewcommand\redcxtrule[5]{
+      \redranchor{##1}\>
+      $\displaystyle\frac{\hfill##2}{##4}
+       \mskip-2.1mu\crushc{\frac{\qquad}{\qquad}}$\'
+      $\displaystyle\frac{\mskip-1.6mu##3\hfill}{\mskip-1.6mu##5}$
+      \\
+    }%
+    \begin{rulesection}{#4}{#5}%
+      \begin{tabbing}%
+        \kern#2\=\kern#3\=\kill
+}
+{%
+      \end{tabbing}%
+    \end{rulesection}%
+  \endgroup
+}
+
+% rule names
+\newcommand\FixV{Fix$\relax_v$}
+\newcommand\BetaV{$\beta_v$}
+\newcommand\BetaT{B$\relax_\tau$}
+\newcommand\CBetaV{C-\BetaV}
+\newcommand\ABetaV{A-\BetaV}
+\newcommand\CBetaT{C-\BetaT}
+\newcommand\ABetaT{A-\BetaT}
+\newcommand\CBetaVA{C-\BetaV-A}
+\newcommand\ABetaVC{A-\BetaV-C}
+\newcommand\CBetaTA{C-\BetaT-A}
+\newcommand\ABetaTC{A-\BetaT-C}
+
+% Don't print the outermost counter in item references
+\def\dropoutercounter{%
+  \expandafter\def\csname p@\@enumctr\endcsname{\relax}%
+}
+
+% Tell the spell checker to ignore something.
+\newcommand\nospell[1]{#1}

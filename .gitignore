@@ -1,6 +1,7 @@
 *.txt
 *.pyc
 *.gz
+Icon*
 oblb.egg-info
 
 docs/paper_src/online_blb.aux
@@ -8,3 +9,19 @@ docs/paper_src/online_blb.bbl
 docs/paper_src/online_blb.blg
 docs/paper_src/online_blb.log
 docs/paper_src/online_blb.pdf
+
+docs/slides/oblb_deck.aux
+
+docs/slides/oblb_deck.log
+
+docs/slides/oblb_deck.nav
+
+docs/slides/oblb_deck.out
+
+docs/slides/oblb_deck.pdf
+
+docs/slides/oblb_deck.snm
+
+docs/slides/oblb_deck.toc
+
+docs/slides/Icon

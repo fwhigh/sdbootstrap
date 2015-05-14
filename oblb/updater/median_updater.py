@@ -7,9 +7,11 @@ class MedianUpdater(Updater):
         pass
 
     def online_update(self,x1,w1,x2,w2,conf=None):
-        if x2 > x1:
-            x1 += 1/conf.precision
-        elif x2 < x1:
-            x1 -= 1/conf.precision
-        w1=w1+w2
-        return (x1,w1)
+        val = x1
+        for i in range(int(w2)):
+            if x2 > val:
+                val = val + 1/conf.precision
+            elif x2 < val:
+                val = val - 1/conf.precision
+        wht=w1+w2
+        return (val,wht)

@@ -1,0 +1,155 @@
+%%
+%% This is file `crush.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% crush.dtx  (with options: `package')
+%% 
+%% This is a generated file.
+%% 
+%% Copyright (C) 2011 by Jesse A. Tov
+%% 
+%% This file may be distributed and/or modified under the This file
+%% conditions of the LaTeX Project Public License, either version 1.2 of
+%% this license or (at your option) any later version. The latest version
+%% of this license is in:
+%% 
+%%    http://www.latex-project.org/lppl.txt
+%% 
+%% and version 1.2 or later is part of all distributions of LaTeX
+%% version 1999/12/01 or later.
+%% 
+\NeedsTeXFormat{LaTeX2e}[1999/12/01]
+\ProvidesPackage{crush}[2011/07/29 v0.2 (box crushing)]
+\newsavebox{\crusher}
+\newcommand\crushl{{%
+  \ifmmode\aftergroup\mathcrushl\else\aftergroup\textcrushl\fi
+}}
+\newcommand\crushr{{%
+  \ifmmode\aftergroup\mathcrushr\else\aftergroup\textcrushr\fi
+}}
+\newcommand\crushc{{%
+  \ifmmode\aftergroup\mathcrushc\else\aftergroup\textcrushc\fi
+}}
+\newcommand\uncrushl{{%
+  \ifmmode\aftergroup\mathuncrushl\else\aftergroup\textuncrushl\fi
+}}
+\newcommand\uncrushr{{%
+  \ifmmode\aftergroup\mathuncrushr\else\aftergroup\textuncrushr\fi
+}}
+\newcommand\mathcrush@helper[1]{\mathpalette{\m@thcrush@helper{#1}}}
+\newcommand\m@thcrush@helper[3]{#1{$#2#3$}}
+\newcommand\mathcrushl[1][0pt]{\mathcrush@helper{\textcrushl[#1]}}
+\newcommand\mathcrushr[1][0pt]{\mathcrush@helper{\textcrushr[#1]}}
+\newcommand\mathcrushc[1][0pt]{\mathcrush@helper{\textcrushc[#1]}}
+\newcommand\mathuncrushl[1][0pt]{\mathcrush@helper{\textuncrushl[#1]}}
+\newcommand\mathuncrushr[1][0pt]{\mathcrush@helper{\textuncrushr[#1]}}
+\newcommand\textcrushl[2][0pt]{%
+  \sbox{\crusher}{#2}%
+  \usebox\crusher
+  \kern-\wd\crusher
+  \kern#1%
+}
+
+\newcommand\textcrushr[2][0pt]{%
+  \sbox{\crusher}{#2}%
+  \kern-\wd\crusher
+  \kern#1%
+  \usebox\crusher
+}
+\newlength{\crush@textcrushclen}
+\newcommand\textcrushc[2][0pt]{%
+  \sbox{\crusher}{#2}%
+  \setlength{\crush@textcrushclen}{#1}%
+  \addtolength{\crush@textcrushclen}{-\wd\crusher}%
+  \kern0.5\crush@textcrushclen
+  \usebox\crusher
+  \kern0.5\crush@textcrushclen
+}
+\newcommand\textuncrushl[2][0pt]{%
+  \sbox{\crusher}{#2}%
+  \kern-\wd\crusher
+  \kern#1%
+}
+\newcommand\textuncrushr[2][0pt]{%
+  \sbox{\crusher}{#2}%
+  \kern\wd\crusher
+  \kern#1%
+}
+
+\newcommand\vcrush[3][c]{%
+  \sbox\crusher{%
+    \begin{minipage}[#1]{#2}%
+      #3%
+    \end{minipage}%
+  }%
+  \sbox\crusher{%
+    \vbox{%
+      \setlength{\hsize}{\wd\crusher}%
+      \ifx T#1\relax
+        \usebox\crusher
+        \vskip-\ht\crusher
+        \vskip-\dp\crusher
+      \else
+        \vskip-\ht\crusher
+        \usebox\crusher
+        \vskip-\dp\crusher
+      \fi
+    }%
+  }%
+  \usebox\crusher
+}
+\newlength{\shrinkboxheighttolerance}
+\newlength{\shrinkboxwidthtolerance}
+\setlength{\shrinkboxheighttolerance}{0.5ex}
+\setlength{\shrinkboxwidthtolerance}{1pt}
+\newsavebox{\@shrink@box@a}
+\newsavebox{\@shrink@box@b}
+\newdimen\@shrink@box@ht
+\newdimen\@shrink@box@wd
+\newcommand\shrinkbox{%
+  \@ifnextchar [
+    \shrinkbox@pos
+    {\shrinkbox@start{c}{\linewidth}}%
+}
+\def\shrinkbox@pos[#1]{%
+  \@ifnextchar [
+    {\shrinkbox@width{#1}}
+    {\shrinkbox@start{#1}{\linewidth}}%
+}
+\def\shrinkbox@width#1[#2]{%
+  \shrinkbox@start{#1}{#2}%
+}
+\newcommand\shrinkbox@start[3]{%
+  \setlength{\@shrink@box@wd}{#2}%
+  \sbox\@shrink@box@a{\parbox[#1]{0.1\@shrink@box@wd}{#3}}%
+  \sbox\@shrink@box@b{\parbox[#1]{\@shrink@box@wd}{#3}}%
+  \def\shrink@box@kont{\shrink@box@loop{#1}{#3}}%
+  \shrink@box@kont%
+}
+\newcommand\shrink@box@loop[2]{%
+  \setlength{\@shrink@box@ht}{\ht\@shrink@box@a}%
+  \addtolength{\@shrink@box@ht}{\dp\@shrink@box@a}%
+  \addtolength{\@shrink@box@ht}{-\ht\@shrink@box@b}%
+  \addtolength{\@shrink@box@ht}{-\dp\@shrink@box@b}%
+  \setlength{\@shrink@box@wd}{\wd\@shrink@box@b}%
+  \addtolength{\@shrink@box@wd}{-\wd\@shrink@box@a}%
+  \ifdim\@shrink@box@ht<\shrinkboxheighttolerance
+    \ifdim\@shrink@box@wd<\shrinkboxwidthtolerance
+      \def\shrink@box@kont{\mbox{\usebox\@shrink@box@a}}%
+    \else
+      \setlength{\@shrink@box@wd}{0.5\@shrink@box@wd}%
+      \addtolength{\@shrink@box@wd}{\wd\@shrink@box@a}%
+      \sbox\@shrink@box@b{\parbox[#1]{\@shrink@box@wd}{#2}}%
+    \fi
+  \else
+    \setlength{\@shrink@box@wd}{0.5\@shrink@box@wd}%
+    \addtolength{\@shrink@box@wd}{\wd\@shrink@box@a}%
+    \sbox\@shrink@box@a{\parbox[#1]{\@shrink@box@wd}{#2}}%
+  \fi
+  \shrink@box@kont
+}
+\endinput
+%%
+%% End of file `crush.sty'.

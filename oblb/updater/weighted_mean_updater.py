@@ -1,11 +1,24 @@
 from . import Updater
+import numpy as np
+import pdb
 
 class WeightedMeanUpdater(Updater):
 
     def __init__(self):
         pass
 
+    def batch_update(self,x2,w2,conf=None):
+        # val = np.sum(w2*x2)/np.sum(w2)
+        # wht = np.sum(w2)
+        num = 0.0
+        wht = 0.0
+        for i in range(len(x2)):
+            num += w2[i]*x2[i]
+            wht += w2[i]
+        val = num/wht
+        return (val,wht)
+
     def online_update(self,x1,w1,x2,w2,conf=None):
-        x1 = (w1*x1+w2*x2)/(w1+w2)
-        w1 = w1+w2
-        return (x1,w1)
+        val = (w1*x1+w2*x2)/float(w1+w2)
+        wht = w1+w2
+        return (val,wht)

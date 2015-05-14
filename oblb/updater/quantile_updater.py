@@ -7,10 +7,12 @@ class QuantileUpdater(Updater):
         pass
 
     def online_update(self,x1,w1,x2,w2,conf=None):
-        r=np.random.rand()
-        if x2 > x1 and r > 1-conf.quantile:
-            x1 += 1/conf.precision
-        elif x2 < x1 and r < 1-conf.quantile:
-            x1 -= 1/conf.precision
-        w1=w1+w2
-        return (x1,w1)
+        val=x1
+        for i in range(int(w2)):
+            r=np.random.rand()
+            if x2 > val and r > 1-conf.quantile:
+                val = val + 1/conf.precision
+            elif x2 < val and r < 1-conf.quantile:
+                val = val - 1/conf.precision
+        wht=w1+w2
+        return (val,wht)
