@@ -179,107 +179,37 @@ Algorithm \ref{algo:exact} outlines the OBLB idea.
 \SetKwFunction{UpdateMaster}{UpdateMaster}
 \SetKwInOut{Input}{Input}
 \SetKwInOut{Output}{Output}
-\Begin{
-    \Input{Unbounded data-weight tuples, $\{(X_1,w^{\prime}_1), (X_2,w^{\prime}_2), ...\}$
-        \\
-        Number of bootstrap realizations, $r$
-        \\
-        Number of nodes, $s$
-        \\
-        Online estimator update rule OnlineUpdate
+\Input{Unbounded data-weight tuples, $\{(X_1,w^{\prime}_1), (X_2,w^{\prime}_2), ...\}$
+    \\
+    Number of bootstrap realizations, $r$
+    \\
+    Number of nodes, $s$
+}
+\Output{Estimator value in each bootstrap realization, $\hat\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$}
+\For{$k \gets 1$ \KwTo $r$}{
+  $w_{k} \gets 0$\;
+  Initialize $\hat\theta_{k}$ to any value\;
+  \For{$j \gets 1$ \KwTo $s$}{
+    $w_{jk} \gets 0$\;
+  Initialize $\hat\theta_{jk}$ to any value\;
+  }
+}
+\For{$i \gets 1$ to $\infty$}{
+  Assign tuple $(X_i,w^{\prime}_i)$ to node $j \in \{1, 2, ..., s\}$\;
+  \For{$k \gets 1$ to $r$}{
+    $W \gets w^{\prime}_i \times \PoissonRandom(1)$\;
+    $(\hat\theta_{jk}, w_{jk}) \gets \InnerOnlineUpdate(\hat\theta_{jk}, w_{jk}, X_i, W)$\;
+  }
+  \If{$\UpdateMaster()$} {
+    \For{$k \gets 1$ to $r$}{
+      $(\hat\theta_{k}, w_{k}) \gets \MasterOnlineUpdate(\hat\theta_{k}, w_{k},\hat\theta_{jk}, w_{jk})$\;
+      $w_{jk} \gets 0$\;
     }
-    \Output{Estimator value in each bootstrap bucket, $\hat\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$}
-    \For{$k \gets 1$ \KwTo $r$}{
-      $w_{k} \gets 0$\;
-      $\hat\theta_{k} \gets 0$\;
-      \For{$k \gets 1$ to $r$}{
-        $w_{jk} \gets 0$\;
-        $\hat\theta_{jk} \gets 0$\;
-      }
-    }
-    \For{$i \gets 1$ to $\infty$}{
-      Assign tuple $(X_i,w^{\prime}_i)$ to node $j \in \{1, 2, ..., s\}$\;
-      \For{$k \gets 1$ to $r$}{
-        $W \gets w^{\prime}_i \times \PoissonRandom(\lambda = 1)$\;
-        $(\hat\theta_{jk}, w_{jk}) \gets \InnerOnlineUpdate(\hat\theta_{jk}, w_{jk}, X_i, W)$\;
-      }
-      \If{$\UpdateMaster()$} {
-        \For{$k \gets 1$ to $r$}{
-          $(\hat\theta_{k}, w_{k}) \gets \MasterOnlineUpdate(\hat\theta_{k}, w_{k},\hat\theta_{jk}, w_{jk})$\;
-          $w_{jk} \gets 0$
-          \\
-          $\hat\theta_{jk} \gets 0$
-        }
-      }
-    }
+  }
 }
 \end{algorithm}
 
 A flowchart is shown in Figure \ref{oblbflowchart}.
-
-\begin{sidewaysfigure}[tbp]
-\centering
-\label{oblbflowchart}
-\begin{tikzpicture}
-    \node (data) [data]  {$\{(X_1,w^{\prime}_1),(X_2,w^{\prime}_2),...\}$};
-
-%    \path (data.east)+(3.2,2.5) node (innerboot1) [wa] {$(\hat\theta_{jk},w_{jk})$, $j=1$, $\forall\,k\in\{1,2,...,r\}$};
-    \path (data.east)+(3.2,2.5) node (innerboot1) [wa] {$j=1$};
-    \path (data.east)+(3.2,1) node (innerboot2)[wa] {$j=2$};
-    \path (data.east)+(3.2,-0.6) node (dots1)[ann] {$\vdots$}; 
-    \path (data.east)+(3.2,-2) node (innerboot3)[wa] {$j=s$}; 
-    \path (innerboot3.south) +(0,-\blockdist) node (asrs)[align=center] {Inner bootstraps:\\$(\hat\theta_{jk},w_{jk})$\\$\forall \; k\in \{1, 2, ...., r\}$};
-    
-    \begin{pgfonlayer}{background}
-        \path (innerboot1.west |- innerboot1.north)+(-0.5,0.3) node (a) {};
-        \path (innerboot3.south -| innerboot3.east)+(+0.5,-0.3) node (b) {};
-        \path (innerboot3.east |- asrs.east)+(+0.5,-0.8) node (c) {};
-        \path[rounded corners, draw=black!50, dashed]
-            (a) rectangle (c);           
-        \path (innerboot3.north west)+(-0.2,0.2) node (a) {};
-    \end{pgfonlayer}
-
-    \path (innerboot1.east)+(4,0) node (outerboot1) [wa] {$k=1$};
-    \path (innerboot2.east)+(4,0) node (outerboot2) [wa] {$k=2$};
-    \path (dots1.east)+(4,0) node (dots2)[ann] {$\vdots$}; 
-    \path (innerboot3.east)+(4,0) node (outerboot3)[wa] {$k=r$};    
-    \path (outerboot3.south) +(0,-\blockdist) node (asrs)[align=center] {Outer bootstrap:\\$(\hat\theta_{k},w_{k})$};
-    
-    \begin{pgfonlayer}{background}
-        \path (outerboot1.west |- outerboot1.north)+(-0.5,0.3) node (a) {};
-        \path (outerboot3.south -| outerboot3.east)+(+0.5,-0.3) node (b) {};
-        \path (outerboot3.east |- asrs.east)+(+0.5,-0.8) node (c) {};
-        \path[rounded corners, draw=black!50, dashed]
-            (a) rectangle (c);           
-        \path (outerboot3.north west)+(-0.2,0.2) node (a) {};
-    \end{pgfonlayer}
-
-    \path (outerboot2.east)+(3.2,-1) node (masterboot) [wa]  {Bootstrap sample\\summary statistics};
-
-    \foreach \x in {1,2,3} 
-    {
-        \path [draw, ->] (data.east) -- node [above] {} (innerboot\x.west);
-    }
-
-    \foreach \x in {1,2,3} 
-    {
-        \foreach \y in {1,2,3} 
-        { 
-            \path [draw, ->] (innerboot\y.east) -- node [above] {} (outerboot\x.west);
-        }
-    }
-    
-    \foreach \x in {1,2,3} 
-    {
-        \path [draw, ->] (outerboot\x.east) -- node [above] {} (masterboot.west);
-    }
-
-
-
-                
-\end{tikzpicture}
-\caption{Schematic representation of the algorithm.}
-\end{sidewaysfigure}
 
 
 \section{Comparison}
@@ -315,7 +245,7 @@ The weighted mean can be computed on streaming data by maintaining the mean and 
 weight. The unweighted mean is the limiting case where the data weights are all one.
 
 \begin{algorithm}
-\caption{OnlineUpdate example: streaming weighted mean}
+\caption{Online weighted mean}
 \label{onlineupdate}
 \DontPrintSemicolon
 \SetKwInOut{Input}{Input}
