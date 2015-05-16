@@ -41,7 +41,7 @@ class MLInnerBootstrap(Bootstrap):
         elif conf.model in set(['GradientBoostingRegressor']):
             model = getattr(sklearn.ensemble,conf.model)(
                 learning_rate=0.001,
-                n_estimators=10000,
+                n_estimators=1000,
                 min_samples_leaf=10,
                 min_samples_split=100,
                 max_depth=2,
@@ -51,6 +51,10 @@ class MLInnerBootstrap(Bootstrap):
             X = X.toarray()
             X_test = X_test.toarray()
         elif conf.model in set(['AdaBoostRegressor']):
+            model = getattr(sklearn.ensemble,conf.model)()
+            X = X.toarray()
+            X_test = X_test.toarray()
+        elif conf.model in set(['RandomForestRegressor']):
             model = getattr(sklearn.ensemble,conf.model)()
             X = X.toarray()
             X_test = X_test.toarray()

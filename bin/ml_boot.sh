@@ -2,7 +2,8 @@
 
 function innerbatchcmd () {
     #oblb_ml_inner.py --test_file cadata_test --model LinearRegression --n_boot 100 ;
-    oblb_ml_inner.py --test_file cadata_test --model GradientBoostingRegressor --n_boot 100 ;
+    #oblb_ml_inner.py --test_file cadata_test --model GradientBoostingRegressor --n_boot 100 ;
+    oblb_ml_inner.py --test_file cadata_test --model RandomForestRegressor --n_boot 100 ;
     #oblb_ml_inner.py --model DummyRegressor ;
 }
 export -f innerbatchcmd
@@ -26,3 +27,4 @@ paste -d' ' \
  > evaluate.txt
 
 R CMD BATCH --no-save --no-restore plotit.R plotit.log
+grep RMSE plotit.log
