@@ -138,32 +138,39 @@ Algorithm \ref{algo:exact} outlines the OBLB idea.
 \caption{Exact batch distributed bootstrap}
 \label{algo:exact}
 \DontPrintSemicolon
+\SetFuncSty{normal}
 \SetKwFunction{InnerBatchUpdate}{InnerBatchUpdate}
 \SetKwFunction{MasterBatchUpdate}{MasterBatchUpdate}
 \SetKwFunction{MultinomialRandom}{MultinomialRandom}
+\SetKwFunction{Cardinality}{Cardinality}
 \SetKwInOut{Input}{Input}
 \SetKwInOut{Output}{Output}
-\Input{Bounded data-weight tuples, $\{(X_1,w^{\prime}_1), (X_2,w^{\prime}_2), ..., (X_n,w^{\prime}_n)\}$
+\Input{Bounded set of data-weight tuples, $\{(X_1,w_1), (X_2,w_2), ..., (X_n,w_n)\}$
     \\
     Number of bootstrap realizations, $r$
     \\
     Number of nodes, $s$
-    \\
-    Size of data subset that is local to node $j\in \{1,2, ..., s\}$, $b_j$ 
 }
-\Output{Estimator value in each bootstrap realization, $\hat\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$}
+\Output{Estimator value in each bootstrap realization, $\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$}
 \For{$j \gets 1$ \KwTo $s$}{
-    Retrieve local set of data-weight tuples, $(\boldsymbol{X}_j,\boldsymbol{w}_j)$\;
-    Compute $b_j$\;
+    Retrieve local set of data-weight tuples\;
+    // Tuples are indexed by $i \in I = \{i_1, i_2, ..., i_{b_j}\}$\;
+    $b_j \gets \Cardinality(I)$\;
     \For{$k \gets 1$ \KwTo $r$}{
-        $\boldsymbol{W} \gets \boldsymbol{w}^{\prime}_j \cdot \MultinomialRandom(b_j,\boldsymbol{1}_{b_j}/b_j)$\;
-        $(\hat\theta_{jk}, w_{jk}) \gets \InnerBatchUpdate(\boldsymbol{X}_j, \boldsymbol{W})$\;
+        % $\boldsymbol{W} \gets \boldsymbol{w}^{\prime}_j \cdot \MultinomialRandom(b_j,\boldsymbol{1}_{b_j}/b_j)$\;
+        // $w^{\prime}_i$ is a vector\;
+        $w^{\prime}_i \gets \MultinomialRandom(b_j,\boldsymbol{1}_{b_j}/b_j)$\;
+        // $W_i$ is a vector over the element-wise product of $w_i$ and $w^{\prime}_i$\;
+        $W_i \gets w_i w^{\prime}_i$\;
+        // $X_i$ is an ordered collection of data points\;
+        $(\theta_{jk}, w_{jk}) \gets \InnerBatchUpdate(X_{i}, W_i)$\;
     }
 }
 \For{$k \gets 1$ \KwTo $r$}{
-    $\hat\theta_{k} \gets \MasterBatchUpdate(\hat\theta_{jk}, w_{jk})$\;
+    // $\theta_{jk}$ and $w_{jk}$ are vectors over $j$ at fixed $k$\;
+    $\theta_{k} \gets \MasterBatchUpdate(\theta_{jk}, w_{jk})$\;
 }
-\Return $\boldsymbol{\hat\theta}$
+\Return $\theta_{k}$
 \end{algorithm}
 
 
@@ -173,36 +180,38 @@ Algorithm \ref{algo:exact} outlines the OBLB idea.
 \caption{Online distributed bootstrap}
 \label{algo:online}
 \DontPrintSemicolon
+\SetFuncSty{normal}
 \SetKwFunction{InnerOnlineUpdate}{InnerOnlineUpdate}
 \SetKwFunction{MasterOnlineUpdate}{MasterOnlineUpdate}
 \SetKwFunction{PoissonRandom}{PoissonRandom}
 \SetKwFunction{UpdateMaster}{UpdateMaster}
 \SetKwInOut{Input}{Input}
 \SetKwInOut{Output}{Output}
-\Input{Unbounded data-weight tuples, $\{(X_1,w^{\prime}_1), (X_2,w^{\prime}_2), ...\}$
+\Input{Unbounded set of data-weight tuples, $\{(X_1,w_1), (X_2,w_2), ...\}$
     \\
     Number of bootstrap realizations, $r$
     \\
     Number of nodes, $s$
 }
-\Output{Estimator value in each bootstrap realization, $\hat\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$}
+\Output{Estimator value in each bootstrap realization, $\theta_{k}\;\forall \; k\in \{1, 2, ...., r\}$}
 \For{$k \gets 1$ \KwTo $r$}{
   $w_{k} \gets 0$\;
-  Initialize $\hat\theta_{k}$ to any value\;
+  Initialize $\theta_{k}$ to any value\;
   \For{$j \gets 1$ \KwTo $s$}{
     $w_{jk} \gets 0$\;
-  Initialize $\hat\theta_{jk}$ to any value\;
+    Initialize $\theta_{jk}$ to any value\;
   }
 }
 \For{$i \gets 1$ to $\infty$}{
-  Assign tuple $(X_i,w^{\prime}_i)$ to node $j \in \{1, 2, ..., s\}$\;
+  Assign tuple $(X_i,w_i)$ to node $j \in \{1, 2, ..., s\}$\;
   \For{$k \gets 1$ to $r$}{
-    $W \gets w^{\prime}_i \times \PoissonRandom(1)$\;
-    $(\hat\theta_{jk}, w_{jk}) \gets \InnerOnlineUpdate(\hat\theta_{jk}, w_{jk}, X_i, W)$\;
+    $w^{\prime} \gets \PoissonRandom(1)$\;
+    $W \gets w_i w^{\prime}$\;
+    $(\theta_{jk}, w_{jk}) \gets \InnerOnlineUpdate(\theta_{jk}, w_{jk}, X_i, W)$\;
   }
   \If{$\UpdateMaster()$} {
     \For{$k \gets 1$ to $r$}{
-      $(\hat\theta_{k}, w_{k}) \gets \MasterOnlineUpdate(\hat\theta_{k}, w_{k},\hat\theta_{jk}, w_{jk})$\;
+      $(\theta_{k}, w_{k}) \gets \MasterOnlineUpdate(\theta_{k}, w_{k},\theta_{jk}, w_{jk})$\;
       $w_{jk} \gets 0$\;
     }
   }

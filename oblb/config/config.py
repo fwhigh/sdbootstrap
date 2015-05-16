@@ -13,10 +13,18 @@ class Config(object):
                             help='N bootstrap interations. Default %s' % (Constants.N_BOOT,),
                             type=int,
                             default=Constants.N_BOOT)
+        parser.add_argument('--job',
+                           help='Job number. Default %s' % (Constants.JOB,),
+                           type=str,
+                           default=Constants.JOB)
         parser.add_argument('--separator', 
                             help='Separator. Default "%s"' % (Constants.SEPARATOR,),
                             type=str,
                             default=Constants.SEPARATOR)
+        parser.add_argument('--composite_key_separator', 
+                            help='Separator. Default "%s"' % (Constants.COMPOSITE_KEY_SEPARATOR,),
+                            type=str,
+                            default=Constants.COMPOSITE_KEY_SEPARATOR)
         parser.add_argument('--online_update', 
                             help='Online update function. Default "%s"' % (Constants.ONLINE_UPDATE,),
                             type=str,
@@ -37,6 +45,14 @@ class Config(object):
                            help='Batch update function. Default %s' % (Constants.BATCH_UPDATE,),
                            type=str,
                            default=Constants.BATCH_UPDATE)
+        parser.add_argument('--model',
+                           help='ML model. Default %s' % (Constants.MODEL,),
+                           type=str,
+                           default=Constants.MODEL)
+        parser.add_argument('--test_file',
+                           help='Test file. Default %s' % (Constants.TEST_FILE,),
+                           type=argparse.FileType('r'),
+                           default=Constants.TEST_FILE)
         parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
                             default=sys.stdin)
         parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
@@ -45,10 +61,14 @@ class Config(object):
         args = parser.parse_args()
 
         self.n_boot        = args.n_boot
+        self.job           = args.job
         self.separator     = args.separator
+        self.composite_key_separator     = args.composite_key_separator
         self.online_update = args.online_update
         self.batch_update  = args.batch_update
         self.precision     = args.precision
         self.quantile      = args.quantile
+        self.model         = args.model
+        self.test_file     = args.test_file
         self.infile        = args.infile
         self.outfile       = args.outfile

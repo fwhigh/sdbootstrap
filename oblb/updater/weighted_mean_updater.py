@@ -7,15 +7,15 @@ class WeightedMeanUpdater(Updater):
     def __init__(self):
         pass
 
-    def batch_update(self,x2,w2,conf=None):
+    def batch_update(self,x,w,w_prime,n,conf=None):
         # val = np.sum(w2*x2)/np.sum(w2)
         # wht = np.sum(w2)
         num = 0.0
         wht = 0.0
-        for i in range(len(x2)):
-            num += w2[i]*x2[i]
-            wht += w2[i]
-        val = num/wht
+        for i in range(len(x)):
+            num += w_prime[i]*w[i]*x[i]
+            wht += w_prime[i]*w[i]
+        val = num/float(wht)
         return (val,wht)
 
     def online_update(self,x1,w1,x2,w2,conf=None):
