@@ -25,3 +25,7 @@ docs/slides/oblb_deck.snm
 docs/slides/oblb_deck.toc
 
 docs/slides/Icon
+
+bin/example_raw_count_hist.png
+
+*.png

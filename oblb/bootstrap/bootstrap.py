@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 class Bootstrap(object):
     def __init__(self):
@@ -39,6 +40,9 @@ class Bootstrap(object):
                         theta,
                         w,
                         id=None,
-                        separator=None):
+                        separator=None,
+                        update_id=None):
+        if update_id is None:
+            update_id = time.time()
         for k in theta:
-            print(separator.join([str(k),str(theta[k]),str(w[k])]))
+            print(separator.join([str(update_id),str(k),str(theta[k]),str(w[k])]))

@@ -13,6 +13,13 @@ class Config(object):
                             help='N bootstrap interations. Default %s' % (Constants.N_BOOT,),
                             type=int,
                             default=Constants.N_BOOT)
+        parser.add_argument('--update_every', 
+                            help='Master update rule: update every N. Default %s' % (Constants.UPDATE_EVERY,),
+                            type=int,
+                            default=Constants.UPDATE_EVERY)
+        parser.add_argument('--no_flush_on_update', 
+                            help='Do not flush inner bootstrap distros on update?',
+                            action="store_true")
         parser.add_argument('--job',
                            help='Job number. Default %s' % (Constants.JOB,),
                            type=str,
@@ -61,6 +68,8 @@ class Config(object):
         args = parser.parse_args()
 
         self.n_boot        = args.n_boot
+        self.update_every  = args.update_every
+        self.no_flush_on_update = args.no_flush_on_update
         self.job           = args.job
         self.separator     = args.separator
         self.composite_key_separator     = args.composite_key_separator

@@ -6,7 +6,7 @@ class MedianUpdater(Updater):
     def __init__(self):
         pass
 
-    def batch_update(self,x,w,w_prime,conf=None):
+    def batch_update(self,x,w,w_prime,n,conf=None):
         val = 0.0
         wht = 0.0
         for j in range(len(x)):

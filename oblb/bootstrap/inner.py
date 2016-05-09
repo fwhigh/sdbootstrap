@@ -4,6 +4,7 @@ import oblb.updater
 import numpy as np
 import sys
 import pdb
+import time
 
 class InnerBootstrap(Bootstrap):
 
@@ -47,7 +48,13 @@ class InnerBootstrap(Bootstrap):
                          online_update=None,
                          conf=None,
                          use_np_poisson=True):
-        for line in infile:
+        count = 1
+        # for line in infile:
+        while 1:
+            line = infile.readline()
+            if not line:
+                break
+            # print(line.strip("\n"))
             if ''.join(line.split()) == '':
                 continue
             field = line.split(separator)
@@ -58,12 +65,21 @@ class InnerBootstrap(Bootstrap):
                     theta_boot[k] = 0.0
                     w_boot[k] = 0.0
                 if use_np_poisson:
-                    w_prime = w*np.random.poisson(lam=1.0)
+                    weight = w*np.random.poisson(lam=1.0)
                 else:
-                    w = w_prime*self.poisson(np.random.rand())
-                if w_prime == 0:
+                    weight = w*self.poisson(np.random.rand())
+                if weight == 0:
                     continue
-                (theta_boot[k],w_boot[k])=online_update(theta_boot[k],w_boot[k],X,w_prime,conf=conf)
+                (theta_boot[k],w_boot[k])=online_update(theta_boot[k],w_boot[k],X,weight,conf=conf)
+            if conf.update_every > 0 and count % conf.update_every == 0:
+                self.print_bootstrap(theta_boot,w_boot,separator=conf.separator)
+                if not conf.no_flush_on_update:
+                    for k in theta_boot:
+                        theta_boot[k] = 0.0
+                        w_boot[k] = 0.0
+                count = 0 # avoid overflow
+            count = count + 1
+            # print("count %d" % count)
 
     def main(self):
         conf = Config()

@@ -3,7 +3,7 @@
 n_data=10000
 n_boot=200
 ss_rate=0
-njobs=8
+njobs=6
 blocksize=$(awk -v n_data=$n_data -v njobs=$njobs 'BEGIN { print 107/10000*n_data/njobs"k" }')
 
 echo "Block size $blocksize"
@@ -28,7 +28,7 @@ function inneronlinecmd () {
     oblb_inner.py --online_update WeightedMeanUpdater ;
     #oblb_inner.py --online_update BatchWeightedMeanUpdater ;
     #oblb_inner.py --online_update SuperlinearUpdater ;
-    #oblb_inner.py --online_update MedianUpdater --precision 1e2 ;
+    # oblb_inner.py --online_update MedianUpdater --precision 1e2 ;
     #oblb_inner.py --online_update QuantileUpdater --precision 1e4 --quantile 0.1 ;
 }
 export -f inneronlinecmd
@@ -37,7 +37,7 @@ function innerbatchcmd () {
     oblb_inner.py --batch_update WeightedMeanUpdater ;
     #oblb_inner.py --batch_update BatchWeightedMeanUpdater ;
     #oblb_inner.py --batch_update SuperlinearUpdater ;
-    #oblb_inner.py --batch_update MedianUpdater --precision 1e2 ;
+    # oblb_inner.py --batch_update MedianUpdater --precision 1e2 ;
     #oblb_inner.py --batch_update QuantileUpdater --precision 1e4 --quantile 0.1 ;
 }
 export -f innerbatchcmd

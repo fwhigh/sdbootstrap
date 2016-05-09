@@ -18,9 +18,10 @@ class OuterBootstrap(Bootstrap):
                          conf=None):
         for line in infile:
             field = line.split(separator)
-            k   = str(field[0])
-            X   = float(field[1])
-            w   = float(field[2])
+            update_id = str(field[0])
+            k   = str(field[1])
+            X   = float(field[2])
+            w   = float(field[3])
             if k not in theta_boot:
                 theta_boot[k] = 0.0
                 w_boot[k] = 0.0

@@ -1,6 +1,7 @@
 class Constants(object):
 
     N_BOOT = 200
+    UPDATE_EVERY = -1
     JOB = 1
     SEPARATOR = ' '
     COMPOSITE_KEY_SEPARATOR = ','
