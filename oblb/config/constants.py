@@ -11,6 +11,7 @@ class Constants(object):
     QUANTILE = 0.5
     MODEL = 'ElasticNet'
     TEST_FILE = None
+    EMA_ALPHA = 0.1
 
     def __init__(self):
         pass

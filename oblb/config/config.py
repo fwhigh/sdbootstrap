@@ -60,6 +60,10 @@ class Config(object):
                            help='Test file. Default %s' % (Constants.TEST_FILE,),
                            type=argparse.FileType('r'),
                            default=Constants.TEST_FILE)
+        parser.add_argument('--ema_alpha', 
+                            help='Exponential moving average alpha. Default %s' % (Constants.EMA_ALPHA,),
+                            type=float,
+                            default=Constants.EMA_ALPHA)
         parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
                             default=sys.stdin)
         parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
@@ -79,5 +83,6 @@ class Config(object):
         self.quantile      = args.quantile
         self.model         = args.model
         self.test_file     = args.test_file
+        self.ema_alpha     = args.ema_alpha
         self.infile        = args.infile
         self.outfile       = args.outfile
