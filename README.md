@@ -1,14 +1,14 @@
-# online-blb
-Online Bag of Little Bootstraps
+# sdbootstrap
+This is the Streaming Distributed Bootstrap, a statistical method for estimating uncertainty from finite sampling on bounded or unbounded data.
 
-## Features of the OBLB
+## Features
 
-  1.  Maintains the (possibly multivariate) bootstrap sample distribution.
-  1.  The inner bootstrap can be online if an online, importance-weighting update rule is provided.
-  1.  The inner bootstrap can be offline if there's no online update rule available, as in regular BLB.
-  1.  The data stream can optionally be subsampled, emulating the m-out-of-n bootstrap method.
+  - The data may be bounded or unbounded.
+  - Bootstrap instances may be parallelized.
+  - Supports importance weighting.
+  - Supports ordinary bootstrap.
 
-## Python OBLB module
+## Python sdbootstrap module
 
     cd oblb
     pip install [-e] .

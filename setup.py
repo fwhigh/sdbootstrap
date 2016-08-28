@@ -5,9 +5,9 @@ except ImportError:
 
 config = {
     'description': 'Online distributed bootstrap',
-    'author': 'Netflix Science & Algorithms',
-    'url': 'https://github.com/fwhigh/online-blb',
-    'download_url': 'https://github.com/fwhigh/online-blb',
+    'author': 'William High',
+    'url': 'https://github.com/fwhigh/sdbootstrap',
+    'download_url': 'https://github.com/fwhigh/sdbootstrap',
     'author_email': 'fwhigh@gmail.com',
     'version': '0.1',
     'install_requires': ['nose','scikit-learn','argparse','matplotlib','scipy','numpy'],
