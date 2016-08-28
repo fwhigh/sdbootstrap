@@ -1,6 +1,6 @@
-from oblb.bootstrap import Bootstrap
-from oblb.config import Config
-import oblb.updater
+from sdbootstrap.bootstrap import Bootstrap
+from sdbootstrap.config import Config
+import sdbootstrap.updater
 
 import numpy as np
 

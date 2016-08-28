@@ -1,6 +1,6 @@
-from oblb.bootstrap import Bootstrap
-from oblb.config import Config
-import oblb.updater
+from sdbootstrap.bootstrap import Bootstrap
+from sdbootstrap.config import Config
+import sdbootstrap.updater
 
 import numpy as np
 
@@ -27,7 +27,7 @@ class MLOuterBootstrap(Bootstrap):
 
     def main(self):
         conf = Config()
-        model = getattr(oblb.updater,conf.online_update)()
+        model = getattr(sdbootstrap.updater,conf.online_update)()
         (theta_boot,w_boot) = self.init_boot(n_boot=conf.n_boot)
         self.update_bootstrap(theta_boot,w_boot,
                               infile=conf.infile,

@@ -1,6 +1,6 @@
-from oblb.bootstrap import Bootstrap
-from oblb.config import Config
-import oblb.updater
+from sdbootstrap.bootstrap import Bootstrap
+from sdbootstrap.config import Config
+import sdbootstrap.updater
 import numpy as np
 import sys
 import pdb
@@ -86,14 +86,14 @@ class InnerBootstrap(Bootstrap):
         theta_boot = dict()
         w_boot = dict()
         if conf.batch_update is not '':
-            updater = getattr(oblb.updater,conf.batch_update)()
+            updater = getattr(sdbootstrap.updater,conf.batch_update)()
             self.batch_update_bootstrap(theta_boot,w_boot,
                                         infile=conf.infile,
                                         separator=conf.separator,
                                         batch_update=updater.batch_update,
                                         conf=conf)
         else:
-            updater = getattr(oblb.updater,conf.online_update)()
+            updater = getattr(sdbootstrap.updater,conf.online_update)()
             self.update_bootstrap(theta_boot,w_boot,
                                   infile=conf.infile,
                                   separator=conf.separator,

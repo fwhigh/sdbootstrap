@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-n_data=10000
+n_data=100000
 n_boot=200
 ss_rate=0
 njobs=6
@@ -53,40 +53,40 @@ if [ ! -f data.txt ]; then
 fi
 
 echo "serial batch"
-time parallel --pipepart --jobs 1 -a data.txt innerbatchcmd \
+time parallel --pipepart --jobs 1 --block 10M -a data.txt innerbatchcmd \
  > pyboot_out0.txt
 cat data.txt | mean_stddev $n_data 1
-cut -d' ' -f 2,3 pyboot_out0.txt | mean_stddev 0 1
+cut -d' ' -f 3,4 pyboot_out0.txt | mean_stddev 0 1
 
 echo "serial chained batch"
 time parallel --pipepart --jobs 1 --block $blocksize -a data.txt innerbatchcmd | \
  sdbootstrap_outer.py > pyboot_out1.txt
 cat data.txt | mean_stddev $n_data 1
-cut -d' ' -f 2,3 pyboot_out1.txt | mean_stddev 0 1
+cut -d' ' -f 3,4 pyboot_out1.txt | mean_stddev 0 1
 
 echo "parallel batch"
 time parallel --pipepart --jobs $njobs --block $blocksize -a data.txt innerbatchcmd | \
  sdbootstrap_outer.py > pyboot_out2.txt
 cat data.txt | mean_stddev $n_data 1
-cut -d' ' -f 2,3 pyboot_out2.txt | mean_stddev 0 1
+cut -d' ' -f 3,4 pyboot_out2.txt | mean_stddev 0 1
 
 echo "serial online"
-time parallel --pipepart --jobs 1 -a data.txt inneronlinecmd \
+time parallel --pipepart --jobs 1 --block 10M -a data.txt inneronlinecmd \
  > pyboot_out3.txt
 cat data.txt | mean_stddev $n_data 1
-cut -d' ' -f 2,3 pyboot_out3.txt | mean_stddev 0 1
+cut -d' ' -f 3,4 pyboot_out3.txt | mean_stddev 0 1
 
 echo "serial chained online"
 time parallel --pipepart --jobs 1 --block $blocksize -a data.txt inneronlinecmd | \
  sdbootstrap_outer.py > pyboot_out4.txt
 cat data.txt | mean_stddev $n_data 1
-cut -d' ' -f 2,3 pyboot_out4.txt | mean_stddev 0 1
+cut -d' ' -f 3,4 pyboot_out4.txt | mean_stddev 0 1
 
 echo "parallel online"
 time parallel --pipepart --jobs $njobs --block $blocksize -a data.txt inneronlinecmd | \
  sdbootstrap_outer.py > pyboot_out5.txt
 cat data.txt | mean_stddev $n_data 1
-cut -d' ' -f 2,3 pyboot_out5.txt | mean_stddev 0 1
+cut -d' ' -f 3,4 pyboot_out5.txt | mean_stddev 0 1
 
 
 

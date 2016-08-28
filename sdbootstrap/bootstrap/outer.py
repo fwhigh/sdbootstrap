@@ -1,6 +1,6 @@
-from oblb.bootstrap import Bootstrap
-from oblb.config import Config
-import oblb.updater
+from sdbootstrap.bootstrap import Bootstrap
+from sdbootstrap.config import Config
+import sdbootstrap.updater
 
 import numpy as np
 
@@ -31,7 +31,7 @@ class OuterBootstrap(Bootstrap):
 
     def main(self):
         conf = Config()
-        online_updater = getattr(oblb.updater,conf.online_update)()
+        online_updater = getattr(sdbootstrap.updater,conf.online_update)()
         theta_boot = dict()
         w_boot = dict()
         self.update_bootstrap(theta_boot,w_boot,
