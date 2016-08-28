@@ -4,7 +4,8 @@ This is the Streaming Distributed Bootstrap, a statistical method for estimating
 ## Features
 
   - The data may be bounded or unbounded.
-  - Bootstrap instances may be parallelized.
+  - The data may be distributed.
+  - Bootstrap instances are distributed with (ie, local to) the data.
   - Supports importance weighting.
   - Supports ordinary bootstrap.
 
