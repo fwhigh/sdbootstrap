@@ -11,9 +11,18 @@ This is the Streaming Distributed Bootstrap, a statistical method for estimating
 
 ## Python sdbootstrap module
 
-    cd sdbootstrap
-    pip install [-e] .
+```bash
+cd sdbootstrap
+pip install [-e] .
+```
 
-## Wiki
+Test it.
 
-[Wiki docs](../../wiki)
+```bash
+python
+import sdbootstrap
+```
+
+## Documentation
+
+[See Wiki.](../../wiki)
