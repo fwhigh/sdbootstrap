@@ -13,3 +13,7 @@ This is the Streaming Distributed Bootstrap, a statistical method for estimating
 
     cd oblb
     pip install [-e] .
+
+## Wiki
+
+[Wiki docs](../../wiki)
