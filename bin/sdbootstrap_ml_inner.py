@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from oblb.bootstrap import MLInnerBootstrap
+from sdbootstrap.bootstrap import MLInnerBootstrap
 
 ib = MLInnerBootstrap()
 ib.main()

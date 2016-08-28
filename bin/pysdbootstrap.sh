@@ -25,20 +25,20 @@ function mean_stddev() {
 export -f mean_stddev
 
 function inneronlinecmd () {
-    oblb_inner.py --online_update WeightedMeanUpdater ;
-    #oblb_inner.py --online_update BatchWeightedMeanUpdater ;
-    #oblb_inner.py --online_update SuperlinearUpdater ;
-    # oblb_inner.py --online_update MedianUpdater --precision 1e2 ;
-    #oblb_inner.py --online_update QuantileUpdater --precision 1e4 --quantile 0.1 ;
+    sdbootstrap_inner.py --online_update WeightedMeanUpdater ;
+    #sdbootstrap_inner.py --online_update BatchWeightedMeanUpdater ;
+    #sdbootstrap_inner.py --online_update SuperlinearUpdater ;
+    # sdbootstrap_inner.py --online_update MedianUpdater --precision 1e2 ;
+    #sdbootstrap_inner.py --online_update QuantileUpdater --precision 1e4 --quantile 0.1 ;
 }
 export -f inneronlinecmd
 
 function innerbatchcmd () {
-    oblb_inner.py --batch_update WeightedMeanUpdater ;
-    #oblb_inner.py --batch_update BatchWeightedMeanUpdater ;
-    #oblb_inner.py --batch_update SuperlinearUpdater ;
-    # oblb_inner.py --batch_update MedianUpdater --precision 1e2 ;
-    #oblb_inner.py --batch_update QuantileUpdater --precision 1e4 --quantile 0.1 ;
+    sdbootstrap_inner.py --batch_update WeightedMeanUpdater ;
+    #sdbootstrap_inner.py --batch_update BatchWeightedMeanUpdater ;
+    #sdbootstrap_inner.py --batch_update SuperlinearUpdater ;
+    # sdbootstrap_inner.py --batch_update MedianUpdater --precision 1e2 ;
+    #sdbootstrap_inner.py --batch_update QuantileUpdater --precision 1e4 --quantile 0.1 ;
 }
 export -f innerbatchcmd
 
@@ -60,13 +60,13 @@ cut -d' ' -f 2,3 pyboot_out0.txt | mean_stddev 0 1
 
 echo "serial chained batch"
 time parallel --pipepart --jobs 1 --block $blocksize -a data.txt innerbatchcmd | \
- oblb_outer.py > pyboot_out1.txt
+ sdbootstrap_outer.py > pyboot_out1.txt
 cat data.txt | mean_stddev $n_data 1
 cut -d' ' -f 2,3 pyboot_out1.txt | mean_stddev 0 1
 
 echo "parallel batch"
 time parallel --pipepart --jobs $njobs --block $blocksize -a data.txt innerbatchcmd | \
- oblb_outer.py > pyboot_out2.txt
+ sdbootstrap_outer.py > pyboot_out2.txt
 cat data.txt | mean_stddev $n_data 1
 cut -d' ' -f 2,3 pyboot_out2.txt | mean_stddev 0 1
 
@@ -78,13 +78,13 @@ cut -d' ' -f 2,3 pyboot_out3.txt | mean_stddev 0 1
 
 echo "serial chained online"
 time parallel --pipepart --jobs 1 --block $blocksize -a data.txt inneronlinecmd | \
- oblb_outer.py > pyboot_out4.txt
+ sdbootstrap_outer.py > pyboot_out4.txt
 cat data.txt | mean_stddev $n_data 1
 cut -d' ' -f 2,3 pyboot_out4.txt | mean_stddev 0 1
 
 echo "parallel online"
 time parallel --pipepart --jobs $njobs --block $blocksize -a data.txt inneronlinecmd | \
- oblb_outer.py > pyboot_out5.txt
+ sdbootstrap_outer.py > pyboot_out5.txt
 cat data.txt | mean_stddev $n_data 1
 cut -d' ' -f 2,3 pyboot_out5.txt | mean_stddev 0 1
 

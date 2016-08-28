@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from oblb.bootstrap import InnerBootstrap
+from sdbootstrap.bootstrap import InnerBootstrap
 
 ib = InnerBootstrap()
 ib.main()
