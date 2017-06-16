@@ -23,6 +23,12 @@ python
 import sdbootstrap
 ```
 
+Be sure to include the scripts in
+
+```bash
+PATH=$PATH:<path-to>/sdbootstrap/bin
+```
+
 ## Documentation
 
 [See Wiki.](../../wiki)
